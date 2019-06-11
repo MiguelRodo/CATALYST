@@ -1,0 +1,56 @@
+---
+title: "test bead identification routine"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup-libraries, include = FALSE}
+library(CATALYST)
+library(openCyto)
+library(ggcyto)
+```
+
+```{r setup-load_data, include = FALSE}
+# load data
+cluster <- FALSE
+if( cluster ){
+  
+} else{
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "prep_post_trans" )
+  gs_prep_trans <- flowWorkspace::load_gs( path_load_gs )
+  gs_test <- gs_prep_trans[1]
+  fr_init <- getData( gs_test[[1]] ) 
+  fr <- fr_init
+  ex <- exprs( fr )
+  n_row <- nrow( ex )
+  set.seed(1)
+  row_sample_vec <- sample.int( n = n_row, size = 1e4, replace = FALSE)
+  ex_rep <- ex[row_sample_vec,]
+  exprs( fr ) <- ex_rep
+}
+```
+
+```{r setup-trans, include = FALSE}
+trans <- cluster
+```
+## Explore
+
+Explore `normCytof` function.
+```{r ,results='asis', fig.height = 4, message = FALSE}
+#debugonce( CATALYST:::.get_bead_inds )
+
+#debugonce( CATALYST:::assignPrelim, 
+#           signature = signature(x="flowFrame", y="data.frame")  )
+#debugonce( CATALYST:::.get_ids)
+#debugonce( CATALYST::estCutoffs, signature = signature(x="dbFrame") )
+# debugonce( CATALYST:::.update_bead_inds )
+# debugonce( CATALYST:::.update_bead_inds )
+# for( i in 1:length( gs_prep_trans ))
+fs <- removeBeads( x = fr, y = "dvs", trans = trans )
+```

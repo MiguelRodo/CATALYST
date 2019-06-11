@@ -36,7 +36,7 @@
 
 setMethod(f="assignPrelim",
     signature=signature(x="flowFrame", y="data.frame"),
-    definition=function(x, y, cofactor=10, verbose=TRUE) {
+    definition=function(x, y, cofactor=10, verbose=TRUE, trans = TRUE ) {
         
         # get masses, intensities and no. of events
         ms <- gsub("[[:alpha:][:punct:]]", "", flowCore::colnames(x))
@@ -55,7 +55,10 @@ setMethod(f="assignPrelim",
             stop("Not all barcode channels found.")
         
         # extract and transform barcode columns from FCS file
-        bcs <- asinh(es[, bc_cols] / cofactor)
+        if( trans ){
+          bcs <- asinh(es[, bc_cols] / cofactor)
+        } else bcs <- es[, bc_cols]
+        
         
         # COMPUTE DEBARCODING
         # assign barcode ID to ea. event 
