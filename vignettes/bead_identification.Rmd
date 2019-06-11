@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r setup-libraries, include = FALSE}
+library(CytoML)
 library(CATALYST)
 library(openCyto)
 library(ggcyto)
@@ -18,8 +19,25 @@ library(ggcyto)
 ```{r setup-load_data, include = FALSE}
 # load data
 cluster <- FALSE
+save <- TRUE
 if( cluster ){
   
+      # get vector of absolute file paths to read in 
+    path_fcs_folder <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
+    path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+    path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+    path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
+    path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+
+    
+  if( save ){
+    # read in FCS files and create GatingSet
+    ncfs <- read.ncdfFlowSet( path_fcs_file_vec )
+    save_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  } else{
+    ncfs <- load_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  }
+
 } else{
   path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
   path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "prep_post_trans" )
@@ -43,14 +61,25 @@ trans <- cluster
 
 Explore `normCytof` function.
 ```{r ,results='asis', fig.height = 4, message = FALSE}
-#debugonce( CATALYST:::.get_bead_inds )
+# debugonce( CATALYST:::.get_bead_inds )
 
-#debugonce( CATALYST:::assignPrelim, 
+# debugonce( CATALYST:::assignPrelim, 
 #           signature = signature(x="flowFrame", y="data.frame")  )
-#debugonce( CATALYST:::.get_ids)
-#debugonce( CATALYST::estCutoffs, signature = signature(x="dbFrame") )
+# debugonce( CATALYST:::.get_ids)
+# debugonce( CATALYST::estCutoffs, signature = signature(x="dbFrame") )
 # debugonce( CATALYST:::.update_bead_inds )
 # debugonce( CATALYST:::.update_bead_inds )
 # for( i in 1:length( gs_prep_trans ))
-fs <- removeBeads( x = fr, y = "dvs", trans = trans )
+if( cluster ){
+  for( i in 1:1 ){
+      fr <- ncfs[[i]]
+      fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
+                     out_path = "/scratch/rdxmig002/data/cytof/Post_debeading/", 
+                     fn = path_fcs_file_short_vec[i], 
+                     fn_sep = "/" )  
+      }
+
+} else{
+  fs <- removeBeads( x = fr, y = "dvs", trans = trans)
+}
 ```

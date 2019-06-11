@@ -17,7 +17,7 @@
         fn <- gsub(".fcs", "", out_nm, TRUE)
       }
       fn <- file.path(out_path, fn)
-      out_nms <- paste0(c("normalised", "beads", "removed"), ".fcs")
+      out_nms <- paste0(c("debeaded", "beads", "removed"), ".fcs")
       out_nms <- paste(fn, out_nms, sep=fn_sep)
       suppressWarnings(lapply(seq_len(3), function(i)
         flowCore::write.FCS(fs[[i]], out_nms[i])))
