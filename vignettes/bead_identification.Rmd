@@ -64,7 +64,14 @@ Remove beads.
 ```{r ,results='asis', fig.height = 4, message = FALSE, eval=FALSE}
 if( cluster ){
   for( i in 1:1 ){
-      fr <- ncfs[[i]]
+      fr_init <- ncfs[[i]]
+      fr <- fr_init
+      ex <- exprs( fr )
+      n_row <- nrow( ex )
+      set.seed(1)
+      row_sample_vec <- sample.int( n = n_row, size = 1e4, replace = FALSE)
+      ex_rep <- ex[row_sample_vec,]
+      exprs( fr ) <- ex_rep
       fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
                      out_path = "/scratch/rdxmig002/data/cytof/Post_debeading/", 
                      fn = path_fcs_file_short_vec[i], 
