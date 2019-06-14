@@ -3,6 +3,9 @@ title: "test bead identification routine"
 author: "Miguel Rodo"
 date: "06 June 2019"
 output: html_document
+params: 
+  cluster: FALSE
+  save: false
 ---
 
 ```{r setup, include=FALSE, include = FALSE}
@@ -17,10 +20,7 @@ library(ggcyto)
 ```
 
 ```{r setup-load_data, include = FALSE}
-# load data
-cluster <- FALSE
-save <- TRUE
-if( cluster ){
+if(  params$cluster ){
   
       # get vector of absolute file paths to read in 
     path_fcs_folder <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
@@ -30,7 +30,7 @@ if( cluster ){
     path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
 
     
-  if( save ){
+  if( params$save ){
     # read in FCS files and create GatingSet
     ncfs <- read.ncdfFlowSet( path_fcs_file_vec )
     save_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
@@ -55,21 +55,13 @@ if( cluster ){
 ```
 
 ```{r setup-trans, include = FALSE}
-trans <- cluster
+trans <- params$cluster
 ```
+
 ## Explore
 
-Explore `normCytof` function.
-```{r ,results='asis', fig.height = 4, message = FALSE}
-# debugonce( CATALYST:::.get_bead_inds )
-
-# debugonce( CATALYST:::assignPrelim, 
-#           signature = signature(x="flowFrame", y="data.frame")  )
-# debugonce( CATALYST:::.get_ids)
-# debugonce( CATALYST::estCutoffs, signature = signature(x="dbFrame") )
-# debugonce( CATALYST:::.update_bead_inds )
-# debugonce( CATALYST:::.update_bead_inds )
-# for( i in 1:length( gs_prep_trans ))
+Remove beads.
+```{r ,results='asis', fig.height = 4, message = FALSE, eval=FALSE}
 if( cluster ){
   for( i in 1:1 ){
       fr <- ncfs[[i]]
