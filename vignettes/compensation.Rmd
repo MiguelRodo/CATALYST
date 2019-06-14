@@ -1,0 +1,171 @@
+---
+title: "compensation"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>")
+```
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+```
+
+```{r setup-load_data, include = FALSE}
+# load data
+cluster <- FALSE
+save <- TRUE
+if( cluster ){
+  
+      # get vector of absolute file paths to read in 
+    path_fcs_folder <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
+    path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+    path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+    path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
+    path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+
+    
+  if( save ){
+    # read in FCS files and create GatingSet
+    ncfs <- read.ncdfFlowSet( path_fcs_file_vec )
+    save_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  } else{
+    ncfs <- load_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  }
+
+} else{
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "prep_post_trans" )
+  gs_prep_trans <- flowWorkspace::load_gs( path_load_gs )
+  gs_test <- gs_prep_trans[1]
+  fr_init <- getData( gs_test[[1]] ) 
+  fr <- fr_init
+  ex <- exprs( fr )
+  n_row <- nrow( ex )
+  set.seed(1)
+  row_sample_vec <- sample.int( n = n_row, size = 1e4, replace = FALSE)
+  ex_rep <- ex[row_sample_vec,]
+  exprs( fr ) <- ex_rep
+}
+
+path_fcs <- "C:/Users/migue/Desktop/export_null.fcs"
+ncfs_2 <- read.ncdfFlowSet( path_fcs )
+gs_2 <- GatingSet( ncfs_2 )
+add_pop( gs_2, alias = "live_cells", pop = "-", gating_method = "mindensity2", parent = "root", dims = "CD3" )
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "full" )
+  gs_prep_trans <- flowWorkspace::load_gs( path_load_gs )
+add_pop( gs_prep_trans[1], alias = "live_cells", pop = "-", gating_method = "mindensity2", parent = "root", dims = "CD3" )
+
+```
+
+```{r setup-trans, include = FALSE}
+trans <- cluster
+```
+
+```{r setup-mass_col_vec, include = FALSE}
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+mass_col_vec <- purrr::map_chr( list( c( 27, 158, 119 ), 
+                      c( 217, 95, 2 ), 
+                      c( 117, 112, 179 ), 
+                      c( 231, 41, 138 ), 
+                      c( 102, 166, 30 ) ), 
+                function(x){
+                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                } ) %>%
+  setNames( c( "113", "115", "108", "198", "209" ) )
+```
+
+```{r setup-db_tbl}
+# create debarcoding key
+rep_1 <- function(x) rep(1,x)
+rep_0 <- function(x) rep(0,x)
+
+db_tbl <- data.frame( `113` = c( rep_1(4), rep_0(6) ), 
+                          `115` = c( 1, rep_0(3), rep_1(3), rep_0(3) ), 
+                          `108` = c( 0, 1, rep_0(2), 1, rep_0(2), rep_1(2), 0 ), 
+                          `198` = c( rep_0(2), 1, rep_0(2), 1, 0, 1, 0, 1 ), 
+                          `209` = c( rep_0(3), 1, rep_0(2), 1, 0, rep_1(2) ), 
+                      check.names = FALSE)
+
+stim_vec <- c( "uns", "p1", "p4", "mtbaux", "ebv" )
+rownames( db_tbl ) <- c( paste0( "pid1_", stim_vec ), 
+                         paste0( "pid2_", stim_vec ) )
+```
+
+# Remove beads
+
+Remove beads.
+```{r beads-remove,results='asis', fig.height = 4, message = FALSE, fig.keep='none'}
+if( cluster ){
+  for( i in 1:1 ){
+      fr <- ncfs[[i]]
+      fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
+                     out_path = "/scratch/rdxmig002/data/cytof/post_debeading/", 
+                     fn = path_fcs_file_short_vec[i], 
+                     fn_sep = "/" )  
+      }
+
+} else{
+  fs <- removeBeads( x = fr, y = "dvs", trans = trans )
+}
+```
+
+```{r db_fr}
+# extract flow frame
+fr <- fs[[1]]
+``` 
+
+# Debarcode - Normalisation First
+
+## Barcode-specific cutoffs
+
+### Assign to barcode pairs.
+```{r bc-f-s-pairs}
+# create initial db_frame object
+re0 <- assignPrelim( x = fr, y = db_tbl, verbose = TRUE, 
+                     trans = FALSE, norm_first = TRUE )
+```
+
+#### Estimate cutoffs. 
+```{r bc-f-s-est}
+# estimate cutoffs
+re <- estCutoffs( x = re0 )
+```
+
+#### Apply cutoffs. 
+```{r bc-f-s-apply}
+# apply cutofs
+mhl_cutoff( re ) <- 5
+re <- applyCutoffs( x = re, sep = 0.25 )
+```
+
+# Compensation
+
+```{r }
+path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "post-debarcoding" )
+gs <- load_gs( path_load_gs )
+fr <- getData( gs[[1]])
+# specify mass channels stained for
+bc_ms <- stringr::str_replace_all( colnames( fr ), "[[:punct:][:alpha:]]", 
+                                   "" ) %>%
+  as.numeric() 
+bc_ms <- bc_ms[!is.na(bc_ms)]
+# debarcode
+re <- assignPrelim(x=fr, y=bc_ms, verbose=FALSE)
+re <- estCutoffs(x=re)
+re <- applyCutoffs(x=re)
+# compute spillover matrix
+spillMat <- computeSpillmat(x=re)
+```
