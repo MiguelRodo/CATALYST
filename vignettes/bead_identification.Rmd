@@ -5,7 +5,11 @@ date: "06 June 2019"
 output: html_document
 params: 
   cluster: FALSE
-  save: false
+  save_input_fcs: FALSE
+  ind: 1
+  fcs: ""
+  out_path: NULL
+  fn: NULL
 ---
 
 ```{r setup, include=FALSE, include = FALSE}
@@ -25,12 +29,13 @@ if(  params$cluster ){
       # get vector of absolute file paths to read in 
     path_fcs_folder <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
     path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+    path_fcs_file_short_vec <- path_fcs_file_short_vec[ which( path_fcs_file_short_vec == params$fcs )]
     path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
     path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
     path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
 
     
-  if( params$save ){
+  if( params$save_input_fcs ){
     # read in FCS files and create GatingSet
     ncfs <- read.ncdfFlowSet( path_fcs_file_vec )
     save_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
@@ -42,13 +47,15 @@ if(  params$cluster ){
   path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
   path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "prep_post_trans" )
   gs_prep_trans <- flowWorkspace::load_gs( path_load_gs )
-  gs_test <- gs_prep_trans[1]
-  fr_init <- getData( gs_test[[1]] ) 
+  fcs_name_vec <- purrr::map_chr( 1:length(gs_prep_trans), function(i){
+    gs_prep_trans[[i]]@name } )
+  gs_ind <- which( fcs_name_vec == params$fcs )
+  fr_init <- getData( gs_prep_trans[[gs_ind]] ) 
   fr <- fr_init
   ex <- exprs( fr )
   n_row <- nrow( ex )
   set.seed(1)
-  row_sample_vec <- sample.int( n = n_row, size = 1e4, replace = FALSE)
+  row_sample_vec <- sample.int( n = n_row, size = 1e3, replace = FALSE)
   ex_rep <- ex[row_sample_vec,]
   exprs( fr ) <- ex_rep
 }
@@ -58,11 +65,10 @@ if(  params$cluster ){
 trans <- params$cluster
 ```
 
-## Explore
+# Remove beads
 
-Remove beads.
-```{r ,results='asis', fig.height = 4, message = FALSE, eval=FALSE}
-if( cluster ){
+```{r ,results='asis', fig.height = 4, message = FALSE}
+if( params$cluster ){
   for( i in 1:1 ){
       fr_init <- ncfs[[i]]
       fr <- fr_init
@@ -79,6 +85,8 @@ if( cluster ){
       }
 
 } else{
-  fs <- removeBeads( x = fr, y = "dvs", trans = trans)
+  fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
+                     out_path = params$out_path, 
+                     fn = params$fn )
 }
 ```
