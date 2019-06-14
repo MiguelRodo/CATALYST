@@ -1,0 +1,548 @@
+---
+title: "test bead identification routine"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>")
+```
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+```
+
+```{r setup-load_data, include = FALSE}
+# load data
+cluster <- FALSE
+save <- TRUE
+if( cluster ){
+  
+    # get vector of absolute file paths to read in 
+    path_fcs_folder <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
+    path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+    path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+    path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
+    path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+
+    
+  if( save ){
+    # read in FCS files and create GatingSet
+    ncfs <- read.ncdfFlowSet( path_fcs_file_vec )
+    save_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  } else{
+    ncfs <- load_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  }
+
+} else{
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "prep_post_trans" )
+  gs_prep_trans <- flowWorkspace::load_gs( path_load_gs )
+  gs_test <- gs_prep_trans[1]
+  fr_init <- getData( gs_test[[1]] ) 
+  fr <- fr_init
+  ex <- exprs( fr )
+  n_row <- nrow( ex )
+  set.seed(1)
+  row_sample_vec <- sample.int( n = n_row, size = 1e4, replace = FALSE)
+  ex_rep <- ex[row_sample_vec,]
+  exprs( fr ) <- ex_rep
+}
+```
+
+```{r setup-trans, include = FALSE}
+trans <- cluster
+```
+
+```{r setup-mass_col_vec, include = FALSE}
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+mass_col_vec <- purrr::map_chr( list( c( 27, 158, 119 ), 
+                      c( 217, 95, 2 ), 
+                      c( 117, 112, 179 ), 
+                      c( 231, 41, 138 ), 
+                      c( 102, 166, 30 ) ), 
+                function(x){
+                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                } ) %>%
+  setNames( c( "113", "115", "108", "198", "209" ) )
+```
+
+# Remove beads
+
+Remove beads.
+```{r beads-remove,results='asis', fig.height = 4, message = FALSE}
+if( cluster ){
+  for( i in 1:1 ){
+      fr <- ncfs[[i]]
+      fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
+                     out_path = "/scratch/rdxmig002/data/cytof/post_debeading/", 
+                     fn = path_fcs_file_short_vec[i], 
+                     fn_sep = "/" )  
+      }
+
+} else{
+  fs <- removeBeads( x = fr, y = "dvs", trans = trans )
+}
+```
+
+```{r db_fr}
+# extract flow frame
+fr <- fs[[1]]
+```
+
+```{r db_tbl}
+# create debarcoding key
+rep_1 <- function(x) rep(1,x)
+rep_0 <- function(x) rep(0,x)
+
+db_tbl <- data.frame( `113` = c( rep_1(4), rep_0(6) ), 
+                          `115` = c( 1, rep_0(3), rep_1(3), rep_0(3) ), 
+                          `108` = c( 0, 1, rep_0(2), 1, rep_0(2), rep_1(2), 0 ), 
+                          `198` = c( rep_0(2), 1, rep_0(2), 1, 0, 1, 0, 1 ), 
+                          `209` = c( rep_0(3), 1, rep_0(2), 1, 0, rep_1(2) ), 
+                      check.names = FALSE)
+
+stim_vec <- c( "uns", "p1", "p4", "mtbaux", "ebv" )
+rownames( db_tbl ) <- c( paste0( "pid1_", stim_vec ), 
+                         paste0( "pid2_", stim_vec ) )
+```
+
+# Debarcode - Normalisation First
+
+## Fixed cutoffs
+
+### Assign to barcode pairs.
+```{r bc-f-f-pairs}
+# create initial db_frame object
+#debugonce( CATALYST:::assignPrelim, 
+#          signature = signature(x="flowFrame", y="data.frame")  )
+# debugonce( CATALYST:::.get_ids)
+re0 <- assignPrelim( x = fr, y = db_tbl, verbose = TRUE, trans = FALSE, norm_first = TRUE )
+```
+
+### Estimate cutoffs. 
+
+Below are the cell counts, among other things, before applying the cutoffs. 
+```{r bc-f-f-est}
+# estimate cutoffs
+re <- estCutoffs( x = re0 )
+re
+```
+
+#### Apply cutoffs. 
+
+Below are the cell counts, among other things, after applying the cutoffs. 
+```{r bc-f-f-apply}
+# apply cutofs
+mhl_cutoff( re ) <- 5
+re <- applyCutoffs( x = re, sep_cutoff = 0.25 )
+re
+```
+
+```{r setup-range_list}
+expr_mat <- exprs(fr)
+range_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = TRUE ]
+  c( min( expr_mat_curr ), setNames( quantile( expr_mat_curr, 0.9999 ), NULL ) )
+} ) %>%
+  setNames( colnames( db_tbl))
+```
+
+#### Yields
+Below are histograms of the separations of the cells for each barcode group, along with the yield for each separation cutoff. 
+
+```{r bc-f-f-yields}
+for( bc in rownames( db_tbl ) ){
+  print( plotYields( x = re, which = bc, plotly = FALSE ) )
+}
+```
+
+### Initial distributions
+
+```{r bc-f-f-dbn1,fig.height = 4}
+expr_mat <- exprs(re)
+plot_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+  ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+    geom_density()
+} )
+cowplot::plot_grid( plotlist = plot_list, ncol = 4 )
+```
+
+### Post-debarcoding
+
+#### Positive bivariate populations
+```{r bc-f-f-dbn-biv, results = 'asis', fig.height = 3}
+expr_mat <- exprs(re)
+id_vec <- bc_ids(re)
+uni_id_vec <- sort( unique(id_vec) )
+uni_id_vec <- uni_id_vec[ uni_id_vec != "0"]
+get_bc_pair_db_tbl <- function( x ){ # get the positive bc markers for a given combo
+  curr_row <- which( rownames( db_tbl ) == x )
+  colnames( db_tbl )[ which( db_tbl[curr_row,] == 1 ) ]
+}
+get_bc_expr_tbl_ind <- function( x ){ # get the expr tbl column indices for a given combo of masses
+  purrr::map_int( x, function( y ) which( stringr::str_detect( colnames( expr_mat ), y ) ) )
+}
+get_bc_expr_tbl <- function( x, expr ){
+  mass_vec_curr <- get_bc_pair_db_tbl( x )
+  expr_ind_vec_curr <- get_bc_expr_tbl_ind( mass_vec_curr )
+  expr[,expr_ind_vec_curr ]
+}
+purrr::walk( uni_id_vec, function(id){
+  expr_mat_curr <- expr_mat[ id_vec == id, ]
+  expr_mat_curr <- get_bc_expr_tbl( id, expr = expr_mat_curr )
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+  mass_vec <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  range_list_curr <- list( range_list[[mass_vec[1]]], 
+                           range_list[[mass_vec[2]]])
+  p0 <- ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr )[1] ), 
+                               y = !!sym( colnames( expr_tbl_curr )[2] ) ) ) +
+    geom_hex( bins = 64 ) +
+    expand_limits( x = range_list_curr[[1]], 
+                   y = range_list_curr[[2]]) +
+    coord_equal()
+  cat("\n")
+  pander::pandoc.header( id, level = 5 )
+  cat("\n")
+  print( p0 ) 
+  cat("\n")
+  } )
+```
+
+### Plot Events
+
+```{r bc-f-f-events, fig.height = 4}
+purrr::walk( uni_id_vec, function(id) plotEvents( x = re, which = id, n_events = 25 ) )
+```
+
+### Plot Mahal distance
+
+```{r  bc-f-f-mahal, fig.height = 6}
+purrr::walk( uni_id_vec, function(id) plotMahal( x = re, which = id) )
+```
+
+#### All univariate populations
+
+```{r bc-f-f-init_range}
+expr_mat <- exprs(re)
+range_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = TRUE ]
+  c( min( expr_mat_curr ), setNames( quantile( expr_mat_curr, 0.9999 ), NULL ) )
+} ) %>%
+  setNames( colnames( db_tbl))
+```
+
+```{r bc-f-f-dbn,fig.height = 6, results = 'asis'}
+expr_mat <- exprs(re)
+plot_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+  mass <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+    geom_density( fill = mass_col_vec[mass] )
+} )
+cat("\n")
+pander::pandoc.header( "Initial distributions", level = 5 )
+cat("\n")
+cowplot::plot_grid( plotlist = plot_list, ncol = 2 )
+cat("\n")
+```
+
+```{r bc-f-f-dbn-uni, fig.height = 2.5, results = 'asis'}
+expr_mat <- exprs(re)
+id_vec <- bc_ids(re)
+uni_id_vec <- sort( unique(id_vec) )
+uni_id_vec <- uni_id_vec[ uni_id_vec != "0"]
+bc_mass_vec <- colnames( db_tbl )
+get_bc_pair_db_tbl <- function( x ){ # get the positive bc markers for a given combo
+  curr_row <- which( rownames( db_tbl ) == x )
+  colnames( db_tbl )[ which( db_tbl[curr_row,] == 1 ) ]
+}
+get_bc_expr_tbl_ind <- function( x ){ # get the expr tbl column indices for a given combo of masses
+  purrr::map_int( x, function( y ) which( stringr::str_detect( colnames( expr_mat ), y ) ) )
+}
+get_bc_expr_tbl <- function( x, expr ){
+  mass_vec_curr <- get_bc_pair_db_tbl( x )
+  expr_ind_vec_curr <- get_bc_expr_tbl_ind( mass_vec_curr )
+  expr[,expr_ind_vec_curr ]
+}
+purrr::walk( uni_id_vec, function(id){
+  pos_mass_vec <- get_bc_pair_db_tbl( x = id )
+  pos_ind_vec <- purrr::map_int( pos_mass_vec, function( mass ){
+    which( bc_mass_vec == mass )
+  } )
+  neg_ind_vec <- purrr::map( bc_mass_vec, function( mass ){
+    if( mass %in% pos_mass_vec ) return( NULL )
+    which( bc_mass_vec == mass )
+  }) %>%
+    purrr::compact() %>%
+    unlist()
+  ordered_mass_vec <- colnames( db_tbl )[ c( pos_ind_vec, neg_ind_vec )]
+  plot_list <- purrr::map( ordered_mass_vec,
+                           function(mass){
+                             expr_mat_curr <- expr_mat[ id_vec == id, stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+                             expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+                            mass <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  range_curr <- range_list[[mass]]
+                             ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+                               geom_density( fill = mass_col_vec[mass] ) +
+                               expand_limits( x = range_curr ) +
+                               theme( axis.text.x = element_text( angle = 90, 
+                                                                  hjust = 1, 
+                                                                  size = 8), 
+                                      axis.title.y = element_blank(), 
+                                      axis.ticks.y = element_blank(), 
+                                      axis.text.y = element_blank( ))
+                         })
+
+  cat("\n")
+  pander::pandoc.header( id, level = 5 )
+  cat("\n")
+  print( cowplot::plot_grid( plotlist = plot_list, ncol = 5 ) )
+  cat("\n")
+} )
+```
+
+## Barcode-specific cutoffs
+
+### Assign to barcode pairs.
+```{r bc-f-s-pairs, eval = FALSE}
+# create initial db_frame object
+re0 <- assignPrelim( x = fr, y = db_tbl, verbose = TRUE, 
+                     trans = FALSE, norm_first = TRUE )
+re0
+```
+
+#### Estimate cutoffs. 
+```{r bc-f-s-est}
+# estimate cutoffs
+re <- estCutoffs( x = re0 )
+re
+```
+
+#### Apply cutoffs. 
+```{r bc-f-s-apply}
+# apply cutofs
+mhl_cutoff( re ) <- 5
+re <- applyCutoffs( x = re )
+re
+```
+
+### Yields
+
+Quote from CATALYST package documentation:
+
+"All yield functions should behave as described above: decline, stagnation, decline. Convergence to 0 yield at low cutoffs is a strong indicator that staining in this channel did not work, and excluding the channel entirely is sensible in this case. It is thus recommended to always view the all-barcodes yield plot to eliminate uninformative populations, since small populations may cause difficulties when computing spill estimates."
+
+```{r bc-f-s-yield}
+for( bc in rownames( db_tbl ) ){
+  print( plotYields( x = re, which = bc, plotly = FALSE ) )
+}
+```
+
+### Initial distributions
+
+```{r bc-f-s-init_range2}
+expr_mat <- exprs(re)
+range_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = TRUE ]
+  c( min( expr_mat_curr ), setNames( quantile( expr_mat_curr, 0.9999 ), NULL ) )
+} ) %>%
+  setNames( colnames( db_tbl))
+```
+
+```{r bc-f-s-dbn,fig.height = 6}
+expr_mat <- exprs(re)
+plot_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+  ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+    geom_density( fill = mass_col_vec[mass] ) 
+} )
+cowplot::plot_grid( plotlist = plot_list, ncol = 2 )
+```
+
+### Post-debarcoding
+
+#### Positive bivariate populations
+```{r bc-f-s-dbn-biv, results = 'asis', fig.height = 3}
+expr_mat <- exprs(re)
+id_vec <- bc_ids(re)
+uni_id_vec <- sort( unique(id_vec) )
+uni_id_vec <- uni_id_vec[ uni_id_vec != "0"]
+get_bc_pair_db_tbl <- function( x ){ # get the positive bc markers for a given combo
+  curr_row <- which( rownames( db_tbl ) == x )
+  colnames( db_tbl )[ which( db_tbl[curr_row,] == 1 ) ]
+}
+get_bc_expr_tbl_ind <- function( x ){ # get the expr tbl column indices for a given combo of masses
+  purrr::map_int( x, function( y ) which( stringr::str_detect( colnames( expr_mat ), y ) ) )
+}
+get_bc_expr_tbl <- function( x, expr ){
+  mass_vec_curr <- get_bc_pair_db_tbl( x )
+  expr_ind_vec_curr <- get_bc_expr_tbl_ind( mass_vec_curr )
+  expr[,expr_ind_vec_curr ]
+}
+purrr::walk( uni_id_vec, function(id){
+  expr_mat_curr <- expr_mat[ id_vec == id, ]
+  expr_mat_curr <- get_bc_expr_tbl( id, expr = expr_mat_curr )
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+  mass_vec <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  range_list_curr <- list( range_list[[mass_vec[1]]], 
+                           range_list[[mass_vec[2]]])
+  p0 <- ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr )[1] ), 
+                               y = !!sym( colnames( expr_tbl_curr )[2] ) ) ) +
+    geom_hex( bins = 64 ) +
+    expand_limits( x = range_list_curr[[1]], 
+                   y = range_list_curr[[2]]) +
+    coord_equal()
+  cat("\n")
+  pander::pandoc.header( id, level = 5 )
+  cat("\n")
+  print( p0 ) 
+  cat("\n")
+  } )
+```
+
+#### All univariate populations
+
+```{r bc-f-s-init_range}
+expr_mat <- exprs(re)
+range_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = TRUE ]
+  c( min( expr_mat_curr ), setNames( quantile( expr_mat_curr, 0.9999 ), NULL ) )
+} ) %>%
+  setNames( colnames( db_tbl))
+```
+
+```{r bc-f-s-dbn2, fig.height = 6, results = 'asis'}
+expr_mat <- exprs(re)
+plot_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+   mass <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+    geom_density( fill = mass_col_vec[mass] )
+} )
+cat("\n")
+pander::pandoc.header( "Initial distributions", level = 5 )
+cat("\n")
+cowplot::plot_grid( plotlist = plot_list, ncol = 2 )
+cat("\n")
+```
+
+```{r bc-f-s-dbn-uni, fig.height = 2.5, results = 'asis'}
+expr_mat <- exprs(re)
+id_vec <- bc_ids(re)
+uni_id_vec <- sort( unique(id_vec) )
+uni_id_vec <- uni_id_vec[ uni_id_vec != "0"]
+bc_mass_vec <- colnames( db_tbl )
+get_bc_pair_db_tbl <- function( x ){ # get the positive bc markers for a given combo
+  curr_row <- which( rownames( db_tbl ) == x )
+  colnames( db_tbl )[ which( db_tbl[curr_row,] == 1 ) ]
+}
+get_bc_expr_tbl_ind <- function( x ){ # get the expr tbl column indices for a given combo of masses
+  purrr::map_int( x, function( y ) which( stringr::str_detect( colnames( expr_mat ), y ) ) )
+}
+get_bc_expr_tbl <- function( x, expr ){
+  mass_vec_curr <- get_bc_pair_db_tbl( x )
+  expr_ind_vec_curr <- get_bc_expr_tbl_ind( mass_vec_curr )
+  expr[,expr_ind_vec_curr ]
+}
+purrr::walk( uni_id_vec, function(id){
+  pos_mass_vec <- get_bc_pair_db_tbl( x = id )
+  pos_ind_vec <- purrr::map_int( pos_mass_vec, function( mass ){
+    which( bc_mass_vec == mass )
+  } )
+  neg_ind_vec <- purrr::map( bc_mass_vec, function( mass ){
+    if( mass %in% pos_mass_vec ) return( NULL )
+    which( bc_mass_vec == mass )
+  }) %>%
+    purrr::compact() %>%
+    unlist()
+  ordered_mass_vec <- colnames( db_tbl )[ c( pos_ind_vec, neg_ind_vec )]
+  plot_list <- purrr::map( ordered_mass_vec,
+                           function(mass){
+                             expr_mat_curr <- expr_mat[ id_vec == id, stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+                             expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+                            mass <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  range_curr <- range_list[[mass]]
+                             ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+                               geom_density( fill = mass_col_vec[mass] ) +
+                               expand_limits( x = range_curr ) +
+                               theme( axis.text.x = element_text( angle = 90, 
+                                                                  hjust = 1, 
+                                                                  size = 8 ), 
+                                      axis.title.y = element_blank(), 
+                                      axis.ticks.y = element_blank(), 
+                                      axis.text.y = element_blank( ) )
+                         })
+
+  cat("\n")
+  pander::pandoc.header( id, level = 5 )
+  cat("\n")
+  print( cowplot::plot_grid( plotlist = plot_list, ncol = 5 ) )
+  cat("\n")
+} )
+```
+
+## Normalisation Second
+
+### Assign to barcode pairs.
+```{r bc-s-pairs}
+# create initial db_frame object
+#debugonce( CATALYST:::assignPrelim, 
+#          signature = signature(x="flowFrame", y="data.frame")  )
+# debugonce( CATALYST:::.get_ids)
+re0 <- assignPrelim( x = fr, y = db_tbl, verbose = FALSE, trans = FALSE, norm_first = FALSE )
+re0
+```
+
+### Estimate cutoffs. 
+Below are the cell counts, among other things, before applying the cutoffs. 
+
+```{r bc-s-est}
+# estimate cutoffs
+re <- estCutoffs( x = re0 )
+re
+```
+
+### Apply cutoffs.
+Below are the cell counts, among other things, after applying the cutoffs. 
+```{r bc-s-apply}
+# apply cutofs
+re <- applyCutoffs( x = re, sep = 0.25 )
+re
+```
+
+```{r bc-s-ass, eval = FALSE, echo = FALSE}
+for( bc in rownames( db_tbl ) ){
+  print( plotYields( x = re, which = bc, plotly = FALSE ) )
+}
+```
+
+
+
