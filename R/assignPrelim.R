@@ -36,7 +36,7 @@
 
 setMethod(f="assignPrelim",
     signature=signature(x="flowFrame", y="data.frame"),
-    definition=function(x, y, cofactor=10, verbose=TRUE, trans = TRUE ) {
+    definition=function(x, y, cofactor=10, verbose=TRUE, trans = TRUE, norm_first = FALSE) {
         
         # get masses, intensities and no. of events
         ms <- gsub("[[:alpha:][:punct:]]", "", flowCore::colnames(x))
@@ -60,27 +60,43 @@ setMethod(f="assignPrelim",
         } else bcs <- es[, bc_cols]
         
         
+        # NORMALIZE BY POPULATION
+        # rescale transformed barcodes for each 
+        # barcode marker, without taking into account
+        # preliminary
+        if( norm_first ){
+          if (verbose) message("Normalizing...")
+          for( i in 1:ncol( bcs ) ){
+            norm_val <- stats::quantile(bcs[,i], .98)
+            bcs[,i] <- bcs[,i] / norm_val
+          }
+        } 
+        
         # COMPUTE DEBARCODING
         # assign barcode ID to ea. event 
         if (verbose) message("Debarcoding data...")
         bc_ids <- .get_ids(bcs, y, ids, verbose)
         inds <- match(bc_ids, ids)
         
-        # NORMALIZE BY POPULATION
-        # rescale transformed barcodes for ea. population
-        # using preliminary assignments
-        if (verbose) message("Normalizing...")
-        normed_bcs <- matrix(0, nrow=nrow(x), ncol=ncol(bcs), 
-            dimnames=list(NULL, colnames(bcs)))
-        for (i in seq_along(ids)) {
+        if( !norm_first ){
+          # NORMALIZE BY POPULATION
+          # rescale transformed barcodes for ea. population
+          # using preliminary assignments
+          if (verbose) message("Normalizing...")
+          normed_bcs <- matrix(0, nrow=nrow(x), ncol=ncol(bcs), 
+                               dimnames=list(NULL, colnames(bcs)))
+          for (i in seq_along(ids)) {
             pos <- which(inds == i)
             if (any(pos)) {
-                pos_bcs <- bcs[pos, y[i, ] == 1]
-                norm_val <- stats::quantile(pos_bcs, .95)
-                normed_bcs[pos, ] <- bcs[pos, ] / norm_val
+              pos_bcs <- bcs[pos, y[i, ] == 1]
+              norm_val <- stats::quantile(pos_bcs, .95)
+              normed_bcs[pos, ] <- bcs[pos, ] / norm_val
             }
+          }
+        } else{
+          normed_bcs <- bcs # normalising has already occured
         }
-        
+      
         # get deltas from normalized intensities 
         if (verbose) message("Computing deltas...")
         deltas <- .get_deltas(normed_bcs, y, verbose)
@@ -121,11 +137,11 @@ setMethod(f="assignPrelim",
 #' @rdname assignPrelim
 setMethod(f="assignPrelim",
     signature=signature(x="flowFrame", y="vector"),
-    definition=function(x, y, cofactor=10, verbose=TRUE) {
+    definition=function(x, y, cofactor=10, verbose=TRUE, trans = TRUE, norm_first = FALSE ) {
         n <- length(y)
         y <- data.frame(matrix(diag(n), ncol=n, 
             dimnames=list(y, y)), check.names=FALSE)
-        assignPrelim(x, y, cofactor, verbose)
+        assignPrelim(x, y, cofactor, verbose, trans, norm_first)
     })
 
 # ------------------------------------------------------------------------------
@@ -133,13 +149,13 @@ setMethod(f="assignPrelim",
 #' @rdname assignPrelim
 setMethod(f="assignPrelim",
     signature=signature(x="character", y="data.frame"),
-    definition=function(x, y, cofactor=10, verbose=TRUE) {
+    definition=function(x, y, cofactor=10, verbose=TRUE, trans = TRUE, norm_first = FALSE ) {
         if (length(x) != 1) 
             stop("'x' should be a single character or flowFrame.")
         if (sum(flowCore::isFCSfile(x)) != 1) 
             stop(x, " is not a valid FCS file.")
         x <- flowCore::read.FCS(x)
-        assignPrelim(x, y, cofactor, verbose)
+        assignPrelim(x, y, cofactor, verbose, trans, norm_first)
     })
 
 # ------------------------------------------------------------------------------
@@ -147,7 +163,7 @@ setMethod(f="assignPrelim",
 #' @rdname assignPrelim
 setMethod(f="assignPrelim",
     signature=signature(x="character", y="vector"),
-    definition=function(x, y, cofactor=10, verbose=TRUE) {
+    definition=function(x, y, cofactor=10, verbose=TRUE, trans = TRUE, norm_first = FALSE ) {
         if (length(x) != 1) 
             stop("'x' should be a single character or flowFrame.")
         if (sum(flowCore::isFCSfile(x)) != 1) 
@@ -155,5 +171,5 @@ setMethod(f="assignPrelim",
         n <- length(y)
         y <- data.frame(matrix(diag(n), ncol=n, 
             dimnames=list(y, y)), check.names=FALSE)
-        assignPrelim(x, y, cofactor, verbose)
+        assignPrelim(x, y, cofactor, verbose, trans, norm_first)
     })

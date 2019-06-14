@@ -66,7 +66,7 @@
         labs( x = bead_name, title = title_vec[j] ) +
         expand_limits( x = range_x, y = range_y )  
       zero_ind_curr <- intersect( zero_ind, ind_num )
-      if( length( zero_ind_curr ) != 0 & length( zero_ind_curr ) > 20 ){
+      if( length( zero_ind_curr ) != 0 & length( zero_ind_curr ) > 20 & !(j %in% c(3,4)) ){
         
         max_len <- pmin( floor( 0.1 * length( non_zero_ind_curr ) ), # if we have very few non_zero indices
                         floor( 0.025 * nrow( es_t ) ), # just a small proportion of total, if we have many zero indices

@@ -23,7 +23,7 @@
 # get beads and remove bead-bead doublets
 # ------------------------------------------------------------------------------
 .get_bead_inds <- function(x, y) {
-    re <- assignPrelim(x, y, verbose=FALSE)
+    re <- assignPrelim(x, y, verbose=FALSE, norm_first = FALSE)
     re <- estCutoffs(re)
     re <- applyCutoffs(re)
     bc_ids(re) == "is_bead"

@@ -44,7 +44,7 @@ setMethod(f="removeBeads",
             remove <- apply(es_t[, bead_cols], 1, function(i) { 
               above_min <- vapply(seq_len(n_beads), 
                                   function(j) sum(i[j] > min_bead_ints[j]), numeric(1))
-              sum(above_min) == n_beads # should I make this at least larger than four of the five?
+              sum(above_min) == n_beads # should I make this at least larger than four of the five? seems not, as the graphs show the performance is good. 
             } )
             
             # trim tails
