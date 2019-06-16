@@ -42,43 +42,60 @@
   cat("\n")
   
   # bivariate
+  get_rgb_col <- function( red, green, blue ){
+    rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+  }
+  breaks <- c( 0, 1, 100, 1e4, 1e6)
+  grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                                        c( 189, 215, 231 ), 
+                                        c( 107, 174, 214 ), 
+                                        c( 49, 130, 189 ), 
+                                        c( 8, 81, 156 ),
+                                        c( 5, 75, 134 ),
+                                        c( 3, 70, 120 ) ), 
+                                  function(x){
+                                    get_rgb_col( x[[1]], x[[2]], x[[3]])
+                                  } )
+  
   plot_list <- map( seq_along( bead_cols ), function( i ){
     bead_col <- bead_cols[i]
     bead_name <- bead_name_vec[i]
     es_t_bead <- as_tibble( es_t[, c( dna_col, bead_col ) ] )
     colnames( es_t_bead ) <- c( "DNA1", "Bead" )
-    range_x <- range( es_t_bead[,"Bead"])
-    range_y <- range( es_t_bead[,"DNA1"])
-    zero_ind <- union( which( es_t_bead$Bead < 0.05), 
-                           which( es_t_bead$DNA1 < 0.05 ) )
-    non_zero_ind <- setdiff( 1:nrow( es_t_bead ), zero_ind )
+    #range_x <- range( es_t_bead[,"Bead"])
+    #range_y <- range( es_t_bead[,"DNA1"])
+    #zero_ind <- union( which( es_t_bead$Bead < 0.05), 
+    #                       which( es_t_bead$DNA1 < 0.05 ) )
+    #non_zero_ind <- setdiff( 1:nrow( es_t_bead ), zero_ind )
     map( seq_along( ind_list ), function( j ){
       inds <- ind_list[[j]]
       ind_num <- (1:nrow( es_t_bead))[inds]
-      p <- ggplot()
-
-      non_zero_ind_curr <- intersect( non_zero_ind, ind_num )
-      p <- p +
-        geom_hex( data = es_t_bead[non_zero_ind_curr,], 
+      
+      #non_zero_ind_curr <- intersect( non_zero_ind, ind_num )
+      p <- ggplot() +
+        geom_hex( data = es_t_bead[ind_num,], # [non_zero_ind_curr,], 
                   mapping = aes( x = Bead, y = DNA1 ),
                   bins = 128, show.legend = FALSE ) +
         cowplot::theme_cowplot() +
         labs( x = bead_name, title = title_vec[j] ) +
-        expand_limits( x = range_x, y = range_y )  
-      zero_ind_curr <- intersect( zero_ind, ind_num )
-      if( length( zero_ind_curr ) != 0 & length( zero_ind_curr ) > 20 & !(j %in% c(3,4)) ){
-        
-        max_len <- pmin( floor( 0.1 * length( non_zero_ind_curr ) ), # if we have very few non_zero indices
-                        floor( 0.025 * nrow( es_t ) ), # just a small proportion of total, if we have many zero indices
-                        length( zero_ind_curr ) ) 
-        sample_vec <- sample( length( zero_ind_curr ), 
-                              size =  max_len )
-        zer_ind_curr_plot <- zero_ind_curr[ sample_vec ]
-        p <- p +
-          geom_hex( data = es_t_bead[zer_ind_curr_plot,],
-                    mapping = aes( x = Bead, y = DNA1 ),
-                    bins = 128, fill = 'gray50', show.legend = FALSE ) 
-      } 
+        #expand_limits( x = range_x, y = range_y ) +
+        scale_fill_gradientn( trans = "log10", 
+                              breaks = breaks, 
+                              colours = grad_col_vec )
+      #zero_ind_curr <- intersect( zero_ind, ind_num )
+      #if( length( zero_ind_curr ) != 0 & length( zero_ind_curr ) > 20 & !(j %in% c(3,4)) ){
+      #  
+      #  max_len <- pmin( floor( 0.1 * length( non_zero_ind_curr ) ), # if we have very few non_zero indices
+      #                  floor( 0.025 * nrow( es_t ) ), # just a small proportion of total, if we have many zero indices
+      #                  length( zero_ind_curr ) ) 
+      #  sample_vec <- sample( length( zero_ind_curr ), 
+      #                        size =  max_len )
+      #  zer_ind_curr_plot <- zero_ind_curr[ sample_vec ]
+      #  p <- p +
+      #    geom_hex( data = es_t_bead[zer_ind_curr_plot,],
+      #              mapping = aes( x = Bead, y = DNA1 ),
+      #              bins = 128, fill = 'gray50', show.legend = FALSE ) 
+      # } 
       p
     })
   })

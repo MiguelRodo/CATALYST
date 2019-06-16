@@ -17,7 +17,9 @@ setMethod(f="removeBeads",
             es <- flowCore::exprs(x)
             if( trans ){
               es_t <- asinh(es/5)
-            } else es_t <- es
+            } else{
+              es_t <- es
+            } 
             chs <- flowCore::colnames(x)
             ms <- .get_ms_from_chs(chs)
             
