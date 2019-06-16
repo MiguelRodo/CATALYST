@@ -195,8 +195,6 @@ print( cowplot::plot_grid( plotlist = plot_list, labels = c( "Post beads" ) ) )
 
 ## Post-flowClust Clean
 
-
-
 ```{r }
 setNode( gs_post_bead, "singlets_post_fc_dna1", FALSE )
 setNode( gs_post_bead, "singlets_post_fc_dna12", FALSE )
@@ -245,6 +243,7 @@ print( cowplot::plot_grid( plotlist = plot_list, labels = c( "Post beads" ) ) )
 ## Barcode-specific cutoffs
 
 ### Assign to barcode pairs.
+
 ```{r bc-f-s-pairs}
 # create initial db_frame object
 re0 <- assignPrelim( x = fr, y = db_tbl, verbose = TRUE, 
@@ -252,12 +251,14 @@ re0 <- assignPrelim( x = fr, y = db_tbl, verbose = TRUE,
 ```
 
 #### Estimate cutoffs. 
+
 ```{r bc-f-s-est}
 # estimate cutoffs
 re <- estCutoffs( x = re0 )
 ```
 
 #### Apply cutoffs. 
+
 ```{r bc-f-s-apply}
 # apply cutofs
 mhl_cutoff( re ) <- 5
@@ -275,6 +276,7 @@ outFCS( x = re, y = fr, out_path = out_path, out_nms = out_nms )
 # Live cells
 
 Get vector of absolute paths to all the FCS files to read in.
+
 ```{r live-path}
 path_fcs_folder <- file.path( path_pkg, "inst", "extdata", "debarcoded" ) 
 path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
@@ -357,8 +359,6 @@ print( cowplot::plot_grid( plotlist = plot_list, labels = c( "Post beads" ) ) )
 ```
 
 ## Post-flowClust Clean
-
-
 
 ```{r }
 setNode( gs_post_bc, "singlets_post_fc_dna1", FALSE )

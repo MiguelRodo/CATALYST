@@ -1,0 +1,57 @@
+params <- list( cluster =  FALSE, ncfs =  FALSE )
+
+
+library(doParallel)
+
+
+do_rpt <- function(r,rmd) {
+  
+  require(rmarkdown)
+  
+  tf <- tempfile()
+  dir.create(tf)
+  
+  result <- try( rmarkdown::render(input=rmd,
+                                   output_file=r$out,
+                                   intermediates_dir=tf,
+                                   params=r$params,
+                                   quiet=TRUE) )
+  unlink(tf)
+  
+  ifelse( class( result == "try-error" ), r$out, NA )
+}
+
+
+if( params$cluster ){
+  path_in <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
+  path_out <- "/scratch/rdxmig002/data/cytof/fcs/debeaded"
+} else{
+  path_base <- file.path( "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External", 
+                          "inst", "extdata" )
+  path_in <- file.path( path_base, "Normalised" )
+  path_out <- file.path( path_base, "fcs", "debeaded" )
+}
+
+repeats_list <- purrr::map( list.files( path_in )[1:2], function(file_name){
+  
+  param_list <-list( cluster = params$cluster,
+                     ncfs = params$ncfs, 
+                     fcs = file_name, 
+                     out_path = path_out )
+  
+  list( out = paste0( stringr::str_sub( file_name, end = -5 ), 
+                      "-debeading.html" ), 
+        params = param_list )
+})
+
+registerDoParallel(cores=3)
+
+fail_vec <- foreach(r=repeats_list, .combine=c) %dopar% do_rpt(r,"vignettes/bead_identification.Rmd" ) 
+fail_vec <- fail_vec[!is.na(fail_vec)]
+
+# if( length( fail_vec ) == 0 ){
+#  cat( "All FCS files were debeaded successfully." )
+#} else{
+#  cat( "The following FCS files were not debeaded succesfully:")
+#  cat( fail_vec )
+#}

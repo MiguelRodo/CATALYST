@@ -77,7 +77,7 @@ setMethod(f="removeBeads",
                          remove_beads = remove_beads, 
                          bead_inds = bead_inds, 
                          remove = remove, 
-                         out_path, 
+                         out_path = out_path, 
                          fn = fn, 
                          fn_sep = fn_sep)
 

@@ -5,11 +5,10 @@ date: "06 June 2019"
 output: html_document
 params: 
   cluster: FALSE
-  save_input_fcs: FALSE
-  ind: 1
-  fcs: ""
-  out_path: NULL
-  fn: NULL
+  ncfs: FALSE
+  fcs: "01_0673 d0 09_0462 d0 _1_1.fcs"
+  out_path: !r file.path( "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External",
+                          "inst", "extdata", "fcs", "debeaded" )
 ---
 
 ```{r setup, include=FALSE, include = FALSE}
@@ -23,7 +22,7 @@ library(openCyto)
 library(ggcyto)
 ```
 
-```{r setup-load_data, include = FALSE}
+```{r setup-load_data,results='asis',include=FALSE}
 if(  params$cluster ){
   
       # get vector of absolute file paths to read in 
@@ -34,13 +33,12 @@ if(  params$cluster ){
     path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
     path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
 
-    
-  if( params$save_input_fcs ){
+  if( !params$ncfs ){
     # read in FCS files and create GatingSet
-    ncfs <- read.ncdfFlowSet( path_fcs_file_vec )
-    save_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+    fr <- read.ncdfFlowSet( path_fcs_file_vec )[[1]]
+    # save_ncfs( fr, "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
   } else{
-    ncfs <- load_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+    fr <- load_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
   }
 
 } else{
@@ -50,15 +48,17 @@ if(  params$cluster ){
   fcs_name_vec <- purrr::map_chr( 1:length(gs_prep_trans), function(i){
     gs_prep_trans[[i]]@name } )
   gs_ind <- which( fcs_name_vec == params$fcs )
-  fr_init <- getData( gs_prep_trans[[gs_ind]] ) 
-  fr <- fr_init
-  ex <- exprs( fr )
-  n_row <- nrow( ex )
-  set.seed(1)
-  row_sample_vec <- sample.int( n = n_row, size = 1e3, replace = FALSE)
-  ex_rep <- ex[row_sample_vec,]
-  exprs( fr ) <- ex_rep
+  fr <- getData( gs_prep_trans[[gs_ind]] ) 
 }
+```
+
+```{r setup-reduce_data_size}
+ex <- exprs( fr )
+n_row <- nrow( ex )
+set.seed(1)
+row_sample_vec <- sample.int( n = n_row, size = 1e3, replace = FALSE)
+ex_rep <- ex[row_sample_vec,]
+exprs( fr ) <- ex_rep
 ```
 
 ```{r setup-trans, include = FALSE}
@@ -68,25 +68,12 @@ trans <- params$cluster
 # Remove beads
 
 ```{r ,results='asis', fig.height = 4, message = FALSE}
+debugonce( CATALYST:::.outDebeaded)
 if( params$cluster ){
-  for( i in 1:1 ){
-      fr_init <- ncfs[[i]]
-      fr <- fr_init
-      ex <- exprs( fr )
-      n_row <- nrow( ex )
-      set.seed(1)
-      row_sample_vec <- sample.int( n = n_row, size = 1e4, replace = FALSE)
-      ex_rep <- ex[row_sample_vec,]
-      exprs( fr ) <- ex_rep
-      fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
-                     out_path = "/scratch/rdxmig002/data/cytof/Post_debeading/", 
-                     fn = path_fcs_file_short_vec[i], 
-                     fn_sep = "/" )  
-      }
-
+  fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
+                     out_path = params$out_path ) 
 } else{
   fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
-                     out_path = params$out_path, 
-                     fn = params$fn )
+                     out_path = params$out_path )
 }
 ```
