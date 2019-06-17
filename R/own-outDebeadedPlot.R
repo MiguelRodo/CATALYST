@@ -62,40 +62,23 @@
     bead_name <- bead_name_vec[i]
     es_t_bead <- as_tibble( es_t[, c( dna_col, bead_col ) ] )
     colnames( es_t_bead ) <- c( "DNA1", "Bead" )
-    #range_x <- range( es_t_bead[,"Bead"])
-    #range_y <- range( es_t_bead[,"DNA1"])
-    #zero_ind <- union( which( es_t_bead$Bead < 0.05), 
-    #                       which( es_t_bead$DNA1 < 0.05 ) )
-    #non_zero_ind <- setdiff( 1:nrow( es_t_bead ), zero_ind )
+    range_x <- range( es_t_bead[,"Bead"])
+    range_y <- range( es_t_bead[,"DNA1"])
+
     map( seq_along( ind_list ), function( j ){
       inds <- ind_list[[j]]
       ind_num <- (1:nrow( es_t_bead))[inds]
       
-      #non_zero_ind_curr <- intersect( non_zero_ind, ind_num )
       p <- ggplot() +
-        geom_hex( data = es_t_bead[ind_num,], # [non_zero_ind_curr,], 
+        geom_hex( data = es_t_bead[ind_num,], 
                   mapping = aes( x = Bead, y = DNA1 ),
                   bins = 128, show.legend = FALSE ) +
         cowplot::theme_cowplot() +
         labs( x = bead_name, title = title_vec[j] ) +
-        #expand_limits( x = range_x, y = range_y ) +
+        expand_limits( x = range_x, y = range_y ) +
         scale_fill_gradientn( trans = "log10", 
                               breaks = breaks, 
                               colours = grad_col_vec )
-      #zero_ind_curr <- intersect( zero_ind, ind_num )
-      #if( length( zero_ind_curr ) != 0 & length( zero_ind_curr ) > 20 & !(j %in% c(3,4)) ){
-      #  
-      #  max_len <- pmin( floor( 0.1 * length( non_zero_ind_curr ) ), # if we have very few non_zero indices
-      #                  floor( 0.025 * nrow( es_t ) ), # just a small proportion of total, if we have many zero indices
-      #                  length( zero_ind_curr ) ) 
-      #  sample_vec <- sample( length( zero_ind_curr ), 
-      #                        size =  max_len )
-      #  zer_ind_curr_plot <- zero_ind_curr[ sample_vec ]
-      #  p <- p +
-      #    geom_hex( data = es_t_bead[zer_ind_curr_plot,],
-      #              mapping = aes( x = Bead, y = DNA1 ),
-      #              bins = 128, fill = 'gray50', show.legend = FALSE ) 
-      # } 
       p
     })
   })
