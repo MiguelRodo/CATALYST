@@ -1,0 +1,62 @@
+---
+title: "Live cells"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+params:
+  cluster: false
+  ncfs: false
+  save_input: true
+  save_output: false
+  trans: true
+  reduce: true
+  only_one: true
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>", eval = FALSE)
+``` 
+
+```{r setup-libraries, include = FALSE, eval = TRUE}
+library(CytoML)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+
+library(stringr)
+library(purrr)
+library(dplyr)
+library(flowWorkspace)
+library(flowCore)
+library(ggplot2)
+library(cowplot)
+filter <- flowCore::filter
+```
+
+```{r function-getFcsFn}
+getFcsFn <- function(fr){
+  fn_init <- fr@description$FILENAME
+  slash_pos_vec <- stringr::str_locate_all( fn_init, "/")[[1]][,1]
+  last_slash_pos <- slash_pos_vec[length(slash_pos_vec)]
+  stringr::str_sub( fn_init, last_slash_pos + 1, -5 )
+}
+```
+
+```{r setup-load_data, include = FALSE, eval = TRUE}
+
+path_pkg <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/debarcode-fixed_cutoff/debarcode-fixed_cutoff"
+path_data <- file.path( path_pkg, "04_0779 D0 AND 07_0369 D0_normalized-2.1GB_-pid1_mtbaux.fcs" )
+path_fcs <- purrr::map_chr( c( "04_1056 d0 and 04_0979 d0_normalized-2.1GB_-pid1_uns.fcs",
+                           "04_0779 D0 AND 07_0369 D0_normalized-2.1GB_-pid1_mtbaux.fcs" ), 
+                        function(x) file.path( path_pkg, x ) ) %>%
+fs <- ncdfFlow::read.ncdfFlowSet(path_data)
+fr <- fs[[1]]
+ex <- as.data.frame( exprs(fr))
+```
+
+```{r }
+windows()
+ggplot( ex %>% dplyr::filter( Ho165Di > 1.5 ), aes( x = Ho165Di )  ) + geom_histogram( bins = 120 )
+```

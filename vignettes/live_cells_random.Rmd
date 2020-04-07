@@ -1,0 +1,198 @@
+---
+title: "live cells"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>")
+```
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+```
+
+```{r setup-load_data, include = FALSE}
+# load data
+cluster <- FALSE
+save <- TRUE
+if( cluster ){
+  
+      # get vector of absolute file paths to read in 
+    path_fcs_folder <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
+    path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+    path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+    path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
+    path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+
+    
+  if( save ){
+    # read in FCS files and create GatingSet
+    ncfs <- read.ncdfFlowSet( path_fcs_file_vec )
+    save_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  } else{
+    ncfs <- load_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  }
+
+} else{
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "debeaded_test" )
+  gs_debeaded <- flowWorkspace::load_gs( path_load_gs )
+  fr <- getData( gs_debeaded[[1]] ) 
+}
+
+if( FALSE ){
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_fcs <- file.path( path_pkg, "inst", "extdata", "Normalised", "01_0673 d0 09_0462 d0 _1_1.fcs" )
+  ncfs <- read.ncdfFlowSet( path_fcs )
+  fr <- ncfs[[1]]
+  ex <- exprs( fr )
+  set.seed(1); samp <- sample( 1:nrow( ex ), 1e4, replace = FALSE )
+  ex <- asinh( ex[samp,] / 5 )
+  exprs( fr ) <- ex
+}
+```
+
+```{r setup-trans, include = FALSE}
+trans <- cluster
+```
+
+# Live cells
+
+```{r }
+set.seed(1)
+add_pop( gs_debeaded, dims = "CD3", gating_method = "mindensity2", parent = "root" )
+```
+
+```{r }
+ggcyto( gs_debeaded, aes( x = CD3 ), subset = 'root' ) +
+  geom_density()
+```
+
+# Singlets 
+
+## FlowClust
+
+Gate singlets using `flowClust.2d`. 
+```{r }
+singlets_fc_gate <- flowClust.2d( fr_live, xChannel = "Ir191Di", yChannel = "Ir193Di", 
+                               filterId = "singlet_fc", K = 2, quantile = 0.85 )
+fr_singlets_fc_gate <- filter( fr_live, singlets_fc_gate)
+ex_singlets_fc <- exprs( fr_live )[!fr_singlets_fc_gate@subSet,]
+fr_singlets_fc <- fr_live
+exprs( fr_singlets_fc ) <- ex_singlets_fc
+```
+
+Plot FlowClust singlets gate. 
+```{r }
+ggplot( as.data.frame( ex_live ), aes( x = Rh103Di ) ) + geom_density()
+ggplot( as.data.frame( ex ), aes( x = Rh103Di ) ) + geom_density()
+```
+
+## Univariate singlet gates
+
+Save output file. 
+```{r }
+fn_init <- fr_live@description$FILENAME
+fn_init <- fn_final
+slash_pos_vec <- stringr::str_locate_all( fn_init, "/")[[1]][,1]
+last_slash_pos <- slash_pos_vec[length(slash_pos_vec)]
+fn_temp <- stringr::str_sub( fn_init, last_slash_pos + 1, -9 )
+fn_temp <- stringr::str_sub( fn_init, end = -9 )
+fn_final <- paste0( fn_temp, "singlets.fcs" )
+flowCore::write.FCS( fr_live, fn_final )
+```
+
+```{r }
+setNode( gs_debeaded, "singlets_post_live", FALSE )
+debugonce( openCyto::flowClust.2d )
+debugonce( openCyto:::.getEllipseGate )
+add_pop( gs_debeaded[1], alias = "singlets_post_live", pop = "+", gating_method = "flowClust.2d", parent = "live_cells", dims = "Ir191Di,Ir193Di", gating_args = "K = 2, quantile = 0.85" )
+```
+
+## Initial flowClust
+
+```{r }
+# debugonce( chol )
+for( i in 1 ){
+  i <- 1
+  p0 <- ggcyto( gs_debeaded[1], aes( x = Ir191Di, y = Ir193Di ), 
+        subset = "root" ) +
+  geom_hex( bins = 64 ) +
+  geom_gate( "singlets_post_live" )
+p1 <- ggcyto( gs_debeaded[1], aes( x = Ir191Di, y = Ir193Di ), 
+        subset = "live_cells" ) +
+  geom_hex( bins = 64 ) +
+  geom_gate( "singlets_post_live" )
+plot_list <- purrr::map( list( p0, p1 ), as.ggplot )
+windows()
+print( cowplot::plot_grid( plotlist = plot_list, labels = c( "Post beads" ) ) )
+}
+```
+
+```{r }
+for( i in 1:10 ){
+  p0 <- ggcyto( gs_debeaded[1], aes( x = Ir191Di ), 
+        subset = "singlets_post_live" ) + 
+  geom_density() 
+p1 <- ggcyto( gs_debeaded[1], aes( x = Ir191Di ), 
+        subset = "live_cells" ) + 
+  geom_density() 
+plot_list <- purrr::map( list( p0, p1 ), as.ggplot )
+windows()
+print( cowplot::plot_grid( plotlist = plot_list, labels = c( "Post beads" ) ) )
+}
+```
+
+## Post-flowClust Clean
+
+```{r }
+setNode( gs_debeaded, "singlets_post_fc_dna1", FALSE )
+setNode( gs_debeaded, "singlets_post_fc_dna12", FALSE )
+add_pop( gs_debeaded, alias = "singlets_post_fc_dna1", pop = "+", gating_method = "mindensity2", parent = "singlets_post_live", dims = "Ir191Di", gating_args = "gate_range = c(0,20)"  )
+add_pop( gs_debeaded, alias = "singlets_post_fc_dna12", pop = "+", gating_method = "mindensity2", parent = "singlets_post_live", dims = "Ir193Di", gating_args = "gate_range = c(0,20)"  )
+
+add_pop( gs_debeaded, alias = "singlets_post_fc_dna1", pop = "-", gating_method = "mindensity2", parent = "singlets_post_live", dims = "Ir191Di", gating_args = "gate_range = c(100,200)"  )
+add_pop( gs_debeaded, alias = "singlets_post_fc_dna12", pop = "-", gating_method = "mindensity2", parent = "singlets_post_live", dims = "Ir193Di", gating_args = "gate_range = c(100,200)"  )
+# high gate
+add_pop( gs_debeaded, alias = "singlets_post_fc_dna1", pop = "-", gating_method = "tailgate", parent = "singlets_post_live", dims = "Ir191Di", gating_args = "method = 'second_deriv'"  )
+add_pop( gs_debeaded, alias = "singlets_post_fc_dna12", pop = "-", gating_method = "tailgate", parent = "singlets_post_fc_dna1", dims = "Ir193Di", gating_args = "method = 'second_deriv'"  )
+```
+
+```{r }
+for( i in 1:10 ){
+  p0 <- ggcyto( gs_debeaded[1], aes( x = Ir191Di ), 
+        subset = "singlets_post_live" ) + 
+  geom_density() +
+    geom_gate( "singlets_post_fc_dna1" )
+p1 <- ggcyto( gs_debeaded[1], aes( x = Ir193Di ), 
+        subset = "singlets_post_live" ) + 
+  geom_density() +
+  geom_gate( "singlets_post_fc_dna12" )
+plot_list <- purrr::map( list( p0, p1 ), as.ggplot )
+windows()
+print( cowplot::plot_grid( plotlist = plot_list, labels = c( "Post beads" ) ) )
+}
+```
+
+```{r }
+for( i in 1:10 ){
+  p0 <- ggcyto( gs_debeaded[1], aes( x = Ir191Di, y = Ir193Di ), 
+        subset = "singlets_post_fc_dna12" ) +
+  geom_hex( bins = 64 )
+p1 <- ggcyto( gs_debeaded[1], aes( x = Ir191Di, y = Ir193Di ), 
+        subset = "live_cells" ) +
+  geom_hex( bins = 64 )
+plot_list <- purrr::map( list( p0, p1 ), as.ggplot )
+windows()
+print( cowplot::plot_grid( plotlist = plot_list, labels = c( "Post beads" ) ) )
+}
+```

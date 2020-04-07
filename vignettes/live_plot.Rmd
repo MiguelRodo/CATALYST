@@ -1,0 +1,66 @@
+---
+title: "Singlets"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+params:
+  only_one: true
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>", message = FALSE, warning = FALSE)
+``` 
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+```
+
+```{r bv-gradient}
+# bivariate
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                                      c( 189, 215, 231 ), 
+                                      c( 107, 174, 214 ), 
+                                      c( 49, 130, 189 ), 
+                                      c( 8, 81, 156 ),
+                                      c( 5, 75, 134 ),
+                                      c( 3, 70, 120 ) ), 
+                                function(x){
+                                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                                } )
+breaks <- c( 0, 1, 100, 1e4, 1e6)
+```
+
+```{r plot, include = FALSE}
+path_data <- "/scratch/rdxmig002/data/cytof"
+path_in <- file.path( path_data, "ncfs", "singlets" ) 
+path_ncfs_dirs_vec <- list.dirs( path_in ) 
+if( params$only_one ){
+  loop_vec <- 2
+} else{
+  loop_vec <- path_ncfs_dirs_vec[-1]
+}
+for( x in loop_vec){
+ fs <- ncdfFlow::load_ncfs( x )
+ p0 <- ggcyto( fs, aes( x = Rh103Di ) ) +
+		 geom_histogram( bins = 50 )
+ p1 <- ggcyto( fs, aes( x = Rh103Di, y = Ir191Di ) ) +
+		 geom_hex(bins=64) +
+			geom_vline( xintercept = x_int, col = 'red', size = 2 ) +
+			scale_fill_gradientn( trans = "log10", 
+								  breaks = breaks,
+								  colours = grad_col_vec )
+ print( cowplot::plot_grid( p0, p1 )
+}
+```

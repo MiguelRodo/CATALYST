@@ -1,0 +1,155 @@
+---
+title: "test plots identification routine"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: html_document
+params: 
+  cluster: FALSE
+  ncfs: FALSE
+  fcs: "01_0673 d0 09_0462 d0 _1_1.fcs"
+  out_path: !r file.path( "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External",
+                          "inst", "extdata", "fcs", "debeaded" )
+  fn: "01_0673 d0 09_0462 d0 _1_1"
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(ggplot2)
+```
+
+```{r setup-load_data,results='asis',include=FALSE}
+if(  params$cluster ){
+  
+      # get vector of absolute file paths to read in 
+    path_fcs_folder <- "/scratch/rdxmig002/data/cytof/Normalised/Normalised/"
+    path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+    path_fcs_file_short_vec <- path_fcs_file_short_vec[ which( path_fcs_file_short_vec == params$fcs )]
+    path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+    path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
+    path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+
+  if( !params$ncfs ){
+    # read in FCS files and create GatingSet
+    fr <- read.ncdfFlowSet( path_fcs_file_vec )[[1]]
+    # save_ncfs( fr, "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  } else{
+    fr <- load_ncfs( "/scratch/rdxmig002/data/cytof/Normalised/ncfs" )
+  }
+
+} else{
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  #path_fcs_folder <- file.path( path_pkg, "inst", "extdata", "Normalised" )
+  #path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+  #path_fcs_file_short_vec <- path_fcs_file_short_vec[ which( path_fcs_file_short_vec == params$fcs )]
+  #path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+  #path_fcs_file_vec <- path_fcs_file_vec[ stringr::str_detect( path_fcs_file_vec, ".fcs" ) ]
+  #path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+  #fs <- read.ncdfFlowSet( path_fcs_file_vec )
+  #save_ncfs( fs, file.path( path_pkg, "inst", "extdata", "ncfs", "trans_test" ) )
+  fs <- load_ncfs(ile.path( path_pkg, "inst", "extdata", "ncfs", "trans_test" ) )
+  fr <- fs[[1]]
+}
+```
+
+```{r }
+# bivariate
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+breaks <- c( 0, 1, 100, 1e4, 1e6)
+grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                                      c( 189, 215, 231 ), 
+                                      c( 107, 174, 214 ), 
+                                      c( 49, 130, 189 ), 
+                                      c( 8, 81, 156 ),
+                                      c( 5, 75, 134 ),
+                                      c( 3, 70, 120 ) ), 
+                                function(x){
+                                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                                } )
+
+```
+
+
+```{r setup-reduce_data_size, eval = FALSE}
+ex <- exprs( fr )
+n_row <- nrow( ex )
+set.seed(1)
+row_sample_vec <- sample.int( n = n_row, size = 1e3, replace = FALSE)
+ex_rep <- ex[row_sample_vec,]
+exprs( fr ) <- ex_rep
+```
+
+```{r setup-trans, include = FALSE}
+# trans <- params$cluster
+trans <- TRUE
+```
+
+# Remove beads
+
+```{r ,results='asis', fig.height = 4, message = FALSE}
+debugonce( removeBeads, signature = signature( x = "flowFrame" ) )
+fs <- removeBeads( x = fr, y = "dvs", trans = trans, 
+                   out_path = params$out_path, fn = params$fn ) 
+```
+
+
+```{r }
+exprs <- exprs( fr )
+exprs <- asinh(exprs/5)
+exprs <- as.data.frame(exprs)
+```
+
+```{r }
+windows()
+ggplot( exprs, aes( x = Ce140Di, y = `Lu175Di` ) ) +
+  geom_hex( bins = 64 )  +
+        scale_fill_gradientn( trans = "log10", 
+                              breaks = breaks, 
+                              colours = grad_col_vec )
+```
+
+```{r }
+exprs_2 <- exprs( fr )
+exprs_2 <- as.data.frame(exprs_2)
+```
+
+```{r }
+windows()
+ggplot( exprs_2, aes( x = Ce140Di, y = `Lu175Di` ) ) +
+  geom_hex( bins = 64 )  +
+  scale_fill_gradientn( trans = "log10", 
+                        breaks = breaks, 
+                        colours = grad_col_vec )
+```
+
+
+
+```{r }
+windows()
+ggplot( as.data.frame( es ), aes( x = Ce140Di, y = `Lu175Di` ) ) +
+  geom_hex( bins = 64 )  +
+  scale_fill_gradientn( trans = "log10", 
+                        breaks = breaks, 
+                        colours = grad_col_vec )
+```
+
+
+```{r }
+windows()
+ggplot( as.data.frame( es_t ), aes( x = Ce140Di, y = `Lu175Di` ) ) +
+  geom_hex( bins = 64 )  +
+  scale_fill_gradientn( trans = "log10", 
+                       # breaks = breaks, 
+                        colours = grad_col_vec ) +
+  labs( x = "es_t immediately after being transformed ")
+```
+
+

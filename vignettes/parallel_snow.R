@@ -4,6 +4,25 @@ print("removing beads from all samples")
 
 time_start <- proc.time()[3]
 
+library(Rmpi)
+library(snow)
+
+np <- 4
+
+cluster <- makeMPIcluster(np)
+
+say_hello <- function(){
+	info <- Sys.inf()[c("nodename","machine")]
+	paste("Hello from", info[1], "with CPU type", info[2])
+}
+
+names <- clusterCall( cluster, say_hello )
+print(unlist(names))
+
+
+if( FALSE ){
+
+
 params <- list( cluster =  TRUE, ncfs =  FALSE )
 
 library(doParallel)
@@ -71,3 +90,4 @@ if( length( fail_vec ) == 0 ){
 }
 
 c( "time_end" = proc.time()[3] - time_start )
+}

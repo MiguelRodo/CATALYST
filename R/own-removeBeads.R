@@ -75,7 +75,7 @@ setMethod(f="removeBeads",
             
             
             .outDebeaded(fr = x, 
-                         es_t = es_t, 
+                         es = es, 
                          remove_beads = remove_beads, 
                          bead_inds = bead_inds, 
                          remove = remove, 

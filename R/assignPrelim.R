@@ -36,7 +36,8 @@
 
 setMethod(f="assignPrelim",
     signature=signature(x="flowFrame", y="data.frame"),
-    definition=function(x, y, cofactor=10, verbose=TRUE, trans = TRUE, norm_first = FALSE) {
+    definition=function(x, y, cofactor=10, verbose=TRUE, 
+                        trans = TRUE, norm_first = FALSE) {
         
         # get masses, intensities and no. of events
         ms <- gsub("[[:alpha:][:punct:]]", "", flowCore::colnames(x))

@@ -1,0 +1,140 @@
+---
+title: "Singlets - Demonstration"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+params:
+  cluster: false
+  ncfs: false
+  save_input: true
+  save_output: false
+  trans: true
+  reduce: false
+  ind: 1
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>", message = FALSE, warning = FALSE)
+``` 
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+```
+
+```{r function-getFcsFn}
+getFcsFn <- function(fr){
+  fn_init <- fr@description$FILENAME
+  slash_pos_vec <- stringr::str_locate_all( fn_init, "/")[[1]][,1]
+  last_slash_pos <- slash_pos_vec[length(slash_pos_vec)]
+  stringr::str_sub( fn_init, last_slash_pos + 1, -5 )
+}
+```
+
+```{r bv-gradient}
+# bivariate
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                                      c( 189, 215, 231 ), 
+                                      c( 107, 174, 214 ), 
+                                      c( 49, 130, 189 ), 
+                                      c( 8, 81, 156 ),
+                                      c( 5, 75, 134 ),
+                                      c( 3, 70, 120 ) ), 
+                                function(x){
+                                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                                } )
+if( !params$reduce ){
+  breaks <- c( 0, 1, 100, 1e4, 1e6)
+} else{
+  breaks <- c( 0, 1, 10, 100, 1e3 )
+}
+```
+
+```{r setup-load_data, include = FALSE}
+if( params$cluster ){
+  
+  path_pkg <- "/scratch/rdxmig002/data/cytof"
+  path_data <- path_pkg
+  if( !params$ncfs ){
+    path_fcs_folder <- file.path( path_pkg, "fcs", "debeaded" ) 
+    path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+    path_fcs_file_short_ind_vec <- str_detect( path_fcs_file_short_vec, 
+                                               "debeaded")
+    path_fcs_file_short_vec <- path_fcs_file_short_vec[ path_fcs_file_short_ind_vec ]
+    path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+    path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+    if( params$ind ) path_fcs_file_vec <- path_fcs_file_vec[1]
+    # read in FCS files and create GatingSet
+    fs <- read.ncdfFlowSet( path_fcs_file_vec )
+    if( params$ind ) fs <- fs[ind]
+    if( params$save_input ) save_ncfs( fs, file.path( path_pkg, "ncfs", "debeaded" ) )
+  } else{
+    fs <- ncdfFlow::load_ncfs( file.path( path_pkg, "ncfs", "debeaded" ) )
+    if( params$ind ) fs <- fs[ind]
+  }
+  
+} else{
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_ncfs_load <- file.path( path_pkg, "inst", "extdata", "ncfs", "test_live" )
+  fs <-  ncdfFlow::load_ncfs( path_ncfs_load )
+  if( params$ind ) fs <- fs[1]
+}
+```
+
+```{r setup-reduce_size_or_transform}
+if( params$reduce | params$trans ){
+  fs <- ncfsApply( fs, function(fr){
+    ex <- exprs(fr)
+    if( params$reduce ){
+      samp <- sample( 1:nrow( ex ), 1e4, replace = FALSE )
+      ex <- ex[samp,]
+    } else samp <- nrow( ex )
+    if( params$trans ) ex <- asinh( ex/5 )
+    exprs(fr) <- ex
+    fr
+  } )
+}
+```
+
+# Singlets 
+
+## Elliptical gates
+
+```{r gate-fc}
+stretch_vec <- c( 1, 5, 10, 20 )
+gs_list = purrr::map( stretch_vec, function(stretch){
+    #setNode( gs, "singlets_fc", FALSE)
+    gs <- GatingSet(fs)
+    gs_add_gating_method( gs = gs,
+                          alias = 'singlets_fc',
+                          pop = "+",
+                          parent = 'root',
+                          gating_method = 'gate_flowclust_2d', 
+                          dims = "Ir191Di,Ir193Di", 
+                          gating_args = paste0( "K = 2, quantile = 0.85, target = c( 6, 6), eigen_stretch = c(1,", stretch, ")" ) )
+    gs
+})
+```
+
+```{r plot-fc-bv, fig.height = 25}
+plot_list = purrr::map( seq_along( gs_list ), function(i){
+    p <- ggcyto( gs_list[[i]], aes( x = Ir191Di, y = Ir193Di ), 
+        subset = 'root' ) +
+      geom_hex( bins = 64 ) +
+      geom_gate( 'singlets_fc', size = 1) +
+      labs( title = paste( "Stretch:", stretch_vec[i] ) ) 
+    as.ggplot(p)
+})
+cowplot::plot_grid( plotlist = plot_list, ncol = 1 )
+```

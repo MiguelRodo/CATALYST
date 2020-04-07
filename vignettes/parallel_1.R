@@ -1,6 +1,6 @@
 mem <- "2.1"
 
-print("removing beads from all samples")
+print( "removing beads from one sample" )
 
 time_start <- proc.time()[3]
 
@@ -40,7 +40,7 @@ n_fcs <- length( list.files( path_in ) )
 ind_end <- n_fcs
 ind_start <- n_fcs - 1
 ind_vec <- c( ind_start, ind_end )
-ind_vec <- 1:n_fcs
+ind_vec <- 1
 repeats_list <- purrr::map( list.files( path_in )[ind_vec], function(file_name){
   
   param_list <-list( cluster = params$cluster,
@@ -56,7 +56,7 @@ repeats_list <- purrr::map( list.files( path_in )[ind_vec], function(file_name){
         params = param_list )
 })
 
-registerDoParallel(cores=75)
+registerDoParallel(cores=2)
 
 print( purrr::map( repeats_list, function(x) x$params$fcs ) )
 

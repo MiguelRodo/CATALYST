@@ -1,0 +1,60 @@
+---
+title: "test bead identification routine"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: html_document
+params: 
+  i: 1
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+#library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(stringr)
+devtools::load_all()
+```
+
+```{r setup-load_data,results='asis',include=FALSE}
+# get vector of absolute file paths to read in 
+i <- 1
+path_fcs_folder <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/Missing Normalised CyTOF Data"
+path_fcs_file_short_vec <- list.files(path_fcs_folder, pattern = "fcs")
+#path_fcs_file_short_vec <- path_fcs_file_short_vec[ which( path_fcs_file_short_vec == params$fcs )]
+path_fcs_file_vec <- file.path(path_fcs_folder, path_fcs_file_short_vec)
+path_fcs_file_vec <- path_fcs_file_vec[stringr::str_detect(path_fcs_file_vec, ".fcs" )]
+# read in FCS files and create GatingSet
+#fs <- read.ncdfFlowSet(path_fcs_file_vec)
+#save_ncfs(fs, file.path(path_fcs_folder, "ncfs")) 
+fs <- load_ncfs(file.path(path_fcs_folder, "ncfs"))
+fr <- fs[[i]]
+```
+
+```{r setup-reduce_data_size, eval = FALSE}
+ex <- exprs(fr)
+n_row <- nrow(ex)
+set.seed(1)
+row_sample_vec <- sample.int(n = n_row, size = 1e3, replace = FALSE)
+ex_rep <- ex[row_sample_vec,]
+exprs(fr) <- ex_rep
+```
+
+# Remove beads
+
+```{r ,results='asis', fig.height = 4, message = FALSE}
+dir_fcs_out <-  file.path(path_fcs_folder, "debeaded")
+if(!dir.exists(dir_fcs_out)) dir.create(dir_fcs_out, recursive = TRUE)
+dir_html <- file.path(path_fcs_folder, "processing files", 
+                "debeading")
+if(!dir.exists(dir_html)) dir.create(dir_html, recursive = TRUE)
+fn_html <- paste0(str_sub(path_fcs_file_short_vec[i], end = -4), "html")
+fs <- removeBeads(x = fr, y = "dvs", trans = TRUE, 
+                  out_path = dir_fcs_out, 
+                  fn = str_sub(path_fcs_file_short_vec[i], end = -5))
+
+```

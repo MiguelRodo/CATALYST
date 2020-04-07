@@ -1,0 +1,262 @@
+---
+title: "Singlets"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+params:
+  cluster: false
+  ncfs: false
+  save_input: true
+  save_output: false
+  trans: true
+  reduce: true
+  ind: NULL
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>", message = FALSE, warning = FALSE)
+``` 
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+```
+
+```{r function-getFcsFn}
+getFcsFn <- function(fr){
+  fn_init <- fr@description$FILENAME
+  slash_pos_vec <- stringr::str_locate_all( fn_init, "/")[[1]][,1]
+  last_slash_pos <- slash_pos_vec[length(slash_pos_vec)]
+  stringr::str_sub( fn_init, last_slash_pos + 1, -5 )
+}
+```
+
+```{r bv-gradient}
+# bivariate
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                                      c( 189, 215, 231 ), 
+                                      c( 107, 174, 214 ), 
+                                      c( 49, 130, 189 ), 
+                                      c( 8, 81, 156 ),
+                                      c( 5, 75, 134 ),
+                                      c( 3, 70, 120 ) ), 
+                                function(x){
+                                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                                } )
+if( !params$reduce ){
+  breaks <- c( 0, 1, 100, 1e4, 1e6)
+} else{
+  breaks <- c( 0, 1, 10, 100, 1e3 )
+}
+```
+
+```{r setup-load_data, include = FALSE}
+if( params$cluster ){
+  
+  path_pkg <- "/scratch/rdxmig002/data/cytof"
+  path_data <- path_pkg
+  path_fcs_folder <- file.path( path_pkg, "fcs", "debeaded" ) 
+  path_fcs_file_short_vec <- list.files( path_fcs_folder ) 
+  path_fcs_file_short_ind_vec <- str_detect( path_fcs_file_short_vec, 
+                                             "debeaded")
+  path_fcs_file_short_vec <- path_fcs_file_short_vec[ path_fcs_file_short_ind_vec ]
+  if( !is.null( params$ind ) ) path_fcs_file_short_ind_vec <- path_fcs_file_short_ind_vec[ind]
+  if( !params$ncfs ){
+    
+    path_fcs_file_vec <- file.path( path_fcs_folder, path_fcs_file_short_vec )
+    path_fcs_file_vec <- normalizePath( path_fcs_file_vec )
+    # read in FCS files and create GatingSet
+    fs <- read.ncdfFlowSet( path_fcs_file_vec )
+    if( params$save_input ){
+		last_folder_name <- ifelse( is.null( params$ind ), 
+									"debeaded",
+									paste0( "debeaded-", 
+											stringr::str_sub( path_fcs_file_short_ind_vec, 
+															  end = -5 ) ) )
+		save_ncfs( fs, file.path( path_pkg, "ncfs", last_folder_name ) )		
+	}
+  } else{
+	path_ncfs <- ifelse( is.null( params$ind ), 
+						 file.path( path_pkg, "ncfs", "debeaded" ), 
+						 file.path( path_pkg, "ncfs", 
+									paste0( "debeaded-", 
+											stringr::str_sub( path_fcs_file_short_ind_vec, 
+															  end = -5 ) ) ) )
+    fs <- ncdfFlow::load_ncfs( path_ncfs )
+  }
+  
+} else{
+  path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+  path_data <- file.path( path_pkg, "inst", "extdata" )
+  #path_fcs <- file.path( path_pkg, "inst", "extdata", "Normalised", "01_0673 d0 09_0462 d0 _1_1.fcs" )
+  #ncfs <- read.ncdfFlowSet( path_fcs )
+  #path_ncfs_save <- file.path( path_pkg, "inst", "extdata", "ncfs", "test_live" )
+  #ncdfFlow::save_ncfs(ncfs, path = path_ncfs_save )
+  path_ncfs_load <- file.path( path_pkg, "inst", "extdata", "ncfs", "test_live" )
+  fs <-  ncdfFlow::load_ncfs( path_ncfs_load )
+  if( params$only_one ) fs <- fs[1]
+}
+```
+
+```{r setup-reduce_size_or_transform}
+if( params$reduce | params$trans ){
+  fs_new <- ncfsApply( fs, function(fr){
+    ex <- exprs(fr)
+    if( params$reduce ){
+      samp <- sample( 1:nrow( ex ), 1e4, replace = FALSE )
+      ex <- ex[samp,]
+    } else samp <- nrow( ex )
+    if( params$trans ) ex <- asinh( ex/5 )
+    exprs(fr) <- ex
+    fr
+  } )
+}
+```
+
+# Singlets 
+
+## Elliptical gates
+
+```{r gate-fc}
+# Gate singlets using `flowClust.2d`. 
+fs_new_2 <- ncfsApply( fs_new, function(fr){
+  ex <- exprs(fr)
+  singlets_fc_gate <- flowClust.2d( ex, 
+                                    xChannel = "Ir191Di", 
+                                      yChannel = "Ir193Di", 
+                                    filterId = "singlet_fc",
+                                    K = 2, 
+                                    quantile = 0.85, 
+                                    target = c( 6, 6 ), 
+                                    eigen_stretch = c(1,20))
+  fr_singlets_fc_gate <- flowCore::filter( fr, singlets_fc_gate)
+  ex_singlets_fc <- ex[fr_singlets_fc_gate@subSet,]
+  exprs( fr ) <- ex_singlets_fc
+  fr
+})
+```
+
+Plot FlowClust singlets gate. 
+```{r plot-bv,results='asis'}
+plot_list <- map( seq_along( fs_new_2 ), function(i){
+  fr <- fs_new_2[[i]]
+  
+  ex <- exprs(fr)
+  title <- getFcsFn(fr)
+  
+  ex_old <- exprs( fs_new[[i]] )
+  xlim <- range( ex_old[,"Ir191Di"] ) 
+  ylim <- range( ex_old[,"Ir193Di"] )
+  p0 <- ggplot( as.data.frame( ex_old ), aes( x = Ir191Di, 
+                                              y = Ir193Di ) ) + 
+    geom_hex( bins = 128, show.legend = FALSE ) +
+    expand_limits( x = c( 0, max( ex[,"Ir191Di"] ) ), 
+                   y = c( 0, max( ex[,"Ir193Di"] ) ) ) +
+    scale_fill_gradientn( trans = "log10", 
+                          breaks = breaks,
+                          colours = grad_col_vec ) +
+    lims( x = xlim, y = ylim ) +
+    background_grid()
+  p1 <- ggplot( as.data.frame( ex ), aes( x = Ir191Di, 
+                                         y = Ir193Di ) ) + 
+    geom_hex( bins = 128, show.legend = FALSE ) +
+    expand_limits( x = c( 0, max( ex[,"Ir191Di"] ) ), 
+                   y = c( 0, max( ex[,"Ir193Di"] ) ) ) +
+    scale_fill_gradientn( trans = "log10", 
+                          breaks = breaks,
+                          colours = grad_col_vec ) +
+    lims( x = xlim, y = ylim ) +
+    background_grid()
+  structure( list(p0,p1), title = title ) })
+lab_vec <- c( "Parent pop.", "Gated pop." )
+
+walk( plot_list, function(x){
+  cat("\n")
+  pander::pandoc.header( attr(x,"title" ), level = 3 )
+  cat("\n")
+  p <- cowplot::plot_grid( plotlist = x, ncol = 2, labels = lab_vec, hjust = -0.75 )
+  print( p )
+  cat("\n")
+} )
+```
+
+## Univariate DNA distributions
+
+They dont seem necessary, based on these histograms.
+
+```{r plot-uv, results = 'asis'}
+plot_list <- map( seq_along( fs_new_2 ), function(i){
+  fr <- fs_new_2[[i]]
+  ex <- as.data.frame( exprs(fr) ) %>% 
+    mutate( type = 'post_fc' )
+  title <- getFcsFn(fr)
+  ex_old <- as.data.frame( exprs( fs_new[[i]] ) ) %>%
+    mutate( type = 'pre_fc' )
+  plot_df <- rbind( ex, ex_old )
+  
+  p0 <- ggplot( plot_df, aes( x = Ir191Di, col = type ) )
+  p1 <- ggplot( plot_df, aes( x = Ir193Di, col = type ) )
+  
+  p_list <- list(p0,p1) %>%
+    map( function(x) x +
+        geom_histogram( fill = 'white', alpha = 0.4, size = 0.2, 
+                        position = 'dodge', bins = 100 ) +
+        scale_colour_manual( values = c( 'post_fc' = 'orange', 
+                                         'pre_fc' = 'dodgerblue' ), 
+                             labels = c( 'post_fc' = 'Post elliptical gate', 
+                                         'pre_fc' = 'Pre elliptical gate' ) ) +
+        labs( y = "Count" ) +
+        theme( legend.title = element_blank(), 
+               axis.ticks.y = element_blank(), 
+               axis.text.y = element_blank() ) )
+  
+  structure( p_list, title = title )
+})
+
+walk( plot_list, function(x){
+  cat("\n")
+  pander::pandoc.header( attr(x,"title" ), level = 3 )
+  cat("\n")
+  p <- cowplot::plot_grid( plotlist = x, ncol = 1 )
+  print( p )
+  cat("\n")
+} )
+
+```
+
+```{r out-trans,eval = params$save_output}
+# back transform
+if( params$trans ){
+  fs_new_2 <- ncfsApply( fs_new_2, function(fr){
+    ex <- exprs( fr )
+    ex <- 5 * sinh(ex)
+    exprs( fr ) <- ex 
+    fr
+  })
+}
+```
+
+## Save
+
+Save output files as NCDF. 
+```{r save-ncfs,eval=params$save_output}
+last_folder_name <- ifelse( is.null( params$ind ), 
+									"singlets",
+									paste0( "singlets-", 
+											stringr::str_sub( path_fcs_file_short_ind_vec, 
+															  end = -5 ) ) )
+path_ncfs_save <- file.path( path_data, "ncfs", last_folder_name )
+ncdfFlow::save_ncfs( fs_new_2, path_ncfs_save )
+```

@@ -1,0 +1,102 @@
+---
+title: "Test gradient changes"
+author: "Miguel Rodo"
+date: "16 June 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r setup-libraries, include = FALSE}
+library(openCyto)
+library(ggcyto)
+```
+
+```{r setup-mass_col_vec, include = FALSE}
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+```
+
+```{r setup-load_data,results='asis',include=FALSE}
+path_pkg <- "C:/Users/migue/Work/PhD/Code/CyTOFACSData-External"
+path_load_gs <- file.path( path_pkg, "inst", "extdata", "gs", "prep_test" )
+gs_prep_trans <- flowWorkspace::load_gs( path_load_gs )
+```
+
+```{r }
+fr <- getData( gs_prep_trans[[1]] )
+ex <- tibble::as_tibble( exprs(fr) )
+```
+
+
+```{r }
+windows()
+ggplot( ex, aes( x = Ce140Di, y = Ir191Di ) ) +
+  geom_hex( bins = 128, show.legend = FALSE )
+```
+
+
+```{r }
+windows()
+ggplot( ex, aes( x = Ce140Di, y = Ir191Di ) ) +
+  geom_hex( bins = 128, show.legend = TRUE ) +
+  scale_fill_continuous( trans = "log10" )
+```
+
+```{r }
+breaks <- c( 0, 1, 100, 1e4, 1e6)
+grad_col_vec <- purrr::map_chr( list( c( 255, 255, 204 ), 
+                      c( 161, 218, 180 ), 
+                      c( 65, 182, 196 ), 
+                      c( 44, 127, 184 ), 
+                      c( 37, 52, 148 ) ), 
+                function(x){
+                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                } )
+windows()
+ggplot( ex, aes( x = Ce140Di, y = Ir191Di ) ) +
+  scale_fill_gradientn( trans = "log10", 
+            breaks = breaks, colours = grad_col_vec ) +
+  geom_hex( bins = 128, show.legend = TRUE )
+```
+
+```{r }
+breaks <- c( 0, 1, 100, 1e4, 1e6)
+grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                      c( 189, 215, 231 ), 
+                      c( 107, 174, 214 ), 
+                      c( 49, 130, 189 ), 
+                      c( 8, 81, 156 ), 
+                      c( 3, 70, 120 ) ), 
+                function(x){
+                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                } )
+windows()
+ggplot( ex, aes( x = Ce140Di, y = Ir191Di ) ) +
+  scale_fill_gradientn( trans = "log10", 
+            breaks = breaks, colours = grad_col_vec ) +
+  geom_hex( bins = 128, show.legend = TRUE )
+```
+
+```{r }
+breaks <- c( 0, 1, 100, 1e4, 1e6)
+grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                      c( 189, 215, 231 ), 
+                      c( 107, 174, 214 ), 
+                      c( 49, 130, 189 ), 
+                      c( 8, 81, 156 ), 
+                      c( 5, 75, 134 ),
+                      c( 3, 70, 120 ) ), 
+                function(x){
+                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                } )
+windows()
+ggplot( ex, aes( x = Ce140Di, y = Ir191Di ) ) +
+  scale_fill_gradientn( trans = "log10", 
+            breaks = breaks, colours = grad_col_vec ) +
+  geom_hex( bins = 128, show.legend = TRUE )
+```
+

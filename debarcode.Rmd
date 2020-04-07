@@ -1,0 +1,18 @@
+---
+title: "Debarcode"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+params:	
+  reduce: true
+  fn: "01_0782 day0 and day180 06sep2017_normalized-2.1GB_live"
+  gate_list: NULL
+  dir_in: "/scratch/rdxmig002/data/cytof/ncfs/live"
+  dir_out: "/scratch/rdxmig002/data/cytof/fcs/debarcode"
+  trans_out: true
+---
+
+# `r stringr::str_replace( params$fn, "live", "" )`
+
