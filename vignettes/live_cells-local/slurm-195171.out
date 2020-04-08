@@ -1,0 +1,63 @@
+[1] "Identifying live cells"
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: parallel
+[1] "03_0442 D0 and 09_0248 D0_normalized-2.1GB__singlets"
+Registered S3 method overwritten by 'R.oo':
+  method        from       
+  throw.default R.methodsS3
+Loading required package: flowWorkspace
+Loading required package: ggplot2
+Loading required package: flowCore
+Loading required package: ncdfFlow
+Loading required package: RcppArmadillo
+Loading required package: BH
+
+Attaching package: 'magrittr'
+
+The following object is masked from 'package:flowWorkspace':
+
+    add
+
+
+Attaching package: 'cowplot'
+
+The following object is masked from 'package:ggplot2':
+
+    ggsave
+
+
+Attaching package: 'purrr'
+
+The following object is masked from 'package:magrittr':
+
+    set_names
+
+The following objects are masked from 'package:foreach':
+
+    accumulate, when
+
+
+Attaching package: 'dplyr'
+
+The following object is masked from 'package:ncdfFlow':
+
+    filter
+
+The following object is masked from 'package:flowCore':
+
+    filter
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+Quitting from lines 271-275 (live_manual.Rmd) 
+Error in if (!file.exists(path)) stop(path, "' not found!") : 
+  argument is of length zero
+Calls: catch_render ... withVisible -> eval -> eval -> fs_load -> <Anonymous>
+Execution halted

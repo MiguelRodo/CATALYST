@@ -1,0 +1,110 @@
+[1] "Identifying live cells"
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: parallel
+[1] "03_0442 D0 and 09_0248 D0_normalized-2.1GB_singlets"
+Registered S3 method overwritten by 'R.oo':
+  method        from       
+  throw.default R.methodsS3
+Loading required package: flowWorkspace
+Loading required package: ggplot2
+Loading required package: flowCore
+Loading required package: ncdfFlow
+Loading required package: RcppArmadillo
+Loading required package: BH
+
+Attaching package: 'magrittr'
+
+The following object is masked from 'package:flowWorkspace':
+
+    add
+
+
+Attaching package: 'cowplot'
+
+The following object is masked from 'package:ggplot2':
+
+    ggsave
+
+
+Attaching package: 'purrr'
+
+The following object is masked from 'package:magrittr':
+
+    set_names
+
+The following objects are masked from 'package:foreach':
+
+    accumulate, when
+
+
+Attaching package: 'dplyr'
+
+The following object is masked from 'package:ncdfFlow':
+
+    filter
+
+The following object is masked from 'package:flowCore':
+
+    filter
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+loading R object...
+Done
+write 03_0442 D0 and 09_0248 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 03_0442 D0 and 09_0248 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "miguel-concat-replace-04_0333_D0_AND_D180_1_TOGETHER_1-2.1GB_singlets"
+loading R object...
+Done
+write miguel-concat-replace-04_0333_D0_AND_D180_1_TOGETHER_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write miguel-concat-replace-04_0333_D0_AND_D180_1_TOGETHER_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0695 D360 and 04_0695 D540_normalized_singlets"
+loading R object...
+Done
+write 04_0695 D360 and 04_0695 D540_normalized_debeaded.fcs to empty cdf slot...
+post load
+write 04_0695 D360 and 04_0695 D540_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+minutes_to_run.elapsed 
+                   0.6 

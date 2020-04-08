@@ -1,0 +1,1291 @@
+[1] "Identifying live cells"
+Loading required package: foreach
+Loading required package: iterators
+Loading required package: parallel
+[1] "01_0782 day0 and day180 06sep2017_normalized-2.1GB_singlets"
+Registered S3 method overwritten by 'R.oo':
+  method        from       
+  throw.default R.methodsS3
+Loading required package: flowWorkspace
+Loading required package: ggplot2
+Loading required package: flowCore
+Loading required package: ncdfFlow
+Loading required package: RcppArmadillo
+Loading required package: BH
+
+Attaching package: 'magrittr'
+
+The following object is masked from 'package:flowWorkspace':
+
+    add
+
+
+Attaching package: 'cowplot'
+
+The following object is masked from 'package:ggplot2':
+
+    ggsave
+
+
+Attaching package: 'purrr'
+
+The following object is masked from 'package:magrittr':
+
+    set_names
+
+The following objects are masked from 'package:foreach':
+
+    accumulate, when
+
+
+Attaching package: 'dplyr'
+
+The following object is masked from 'package:ncdfFlow':
+
+    filter
+
+The following object is masked from 'package:flowCore':
+
+    filter
+
+The following objects are masked from 'package:stats':
+
+    filter, lag
+
+The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union
+
+loading R object...
+Done
+post load
+write 01_0782 day0 and day180 06sep2017_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "01_0673 d0 09_0462 d0 _1_1-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 01_0673 d0 09_0462 d0 _1_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "01-0993 D0 AND 07-1147 DAY0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 01-0993 D0 AND 07-1147 DAY0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "02-0185 DO AND 09-0296 D0 29SEP2017_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 02-0185 DO AND 09-0296 D0 29SEP2017_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "03_0448 D0 and 09_0581 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 03_0448 D0 and 09_0581 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "03-0697 D0 and 03-0545 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 03-0697 D0 and 03-0545 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0152 D0 AND 04_0152 D180_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0152 D0 AND 04_0152 D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0152 d360 and d540_3_1-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0152 d360 and d540_3_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0238 d0and d180-2_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0238 d0and d180-2_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0511 D0 AND 04_1119 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0511 D0 AND 04_1119 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0695 do and d180_4_1-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0695 do and d180_4_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0718 d360 and 04_0886 d360_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0718 d360 and 04_0886 d360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0741_d0 and d180_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0741_d0 and d180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0779 D0 AND 07_0369 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0779 D0 AND 07_0369 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0811D180 AND 07_1153 D180_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0811D180 AND 07_1153 D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0843 D0 AND 04_0843 D180_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0843 D0 AND 04_0843 D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0843 d360 and 04_0843 d540_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0843 d360 and 04_0843 d540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0910 d0 and 07_1132 d0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0910 d0 and 07_1132 d0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_0910 D540 AND 07_1132 D540_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_0910 D540 AND 07_1132 D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_1020 D360 and 04_1020 D540_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_1020 D360 and 04_1020 D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_1020D0 and 04_1020 D180_normalized_singlets"
+loading R object...
+Done
+post load
+write 04_1020D0 and 04_1020 D180_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_1056 d0 and 04_0979 d0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_1056 d0 and 04_0979 d0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_1056 d180 and 04_0979 d180_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_1056 d180 and 04_0979 d180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_1104 d0 and d180_2_1-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_1104 d0 and d180_2_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_1241 D0 AND 07_0119 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+post load
+write 04_1241 D0 AND 07_0119 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04_1241 d180 and 07_0119 d180_normalized_singlets"
+loading R object...
+Done
+post load
+write 04_1241 d180 and 07_0119 d180_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04-0718 D0 AND 04-0886 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 04-0718 D0 AND 04-0886 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 04-0718 D0 AND 04-0886 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04-0718 D180 AND 04-0886 D180_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 04-0718 D180 AND 04-0886 D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 04-0718 D180 AND 04-0886 D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04-0910 D360 AND 07-1132 D360_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 04-0910 D360 AND 07-1132 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 04-0910 D360 AND 07-1132 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "04-1056 D360 PLUS 04-0979 D360_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 04-1056 D360 PLUS 04-0979 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 04-1056 D360 PLUS 04-0979 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "040238 d0and d180-2_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 040238 d0and d180-2_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 040238 d0and d180-2_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "06_0129 d0 and d180_5_1-2.1GB_singlets"
+loading R object...
+Done
+write 06_0129 d0 and d180_5_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 06_0129 d0 and d180_5_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0060 D360 AND 04_0699 D360_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0060 D360 AND 04_0699 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0060 D360 AND 04_0699 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0150 D0 AND D180_2_1-2.1GB_singlets"
+loading R object...
+Done
+write 07_0150 D0 AND D180_2_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0150 D0 AND D180_2_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0177 D0 AND 07_0177 D180_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0177 D0 AND 07_0177 D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0177 D0 AND 07_0177 D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0208 D0 and D540_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0208 D0 and D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0208 D0 and D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0214 DE360 and D540_normalized_singlets"
+loading R object...
+Done
+write 07_0214 DE360 and D540_normalized_debeaded.fcs to empty cdf slot...
+post load
+write 07_0214 DE360 and D540_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0236 D0 AND D180_3_1-2.1GB_singlets"
+loading R object...
+Done
+write 07_0236 D0 AND D180_3_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0236 D0 AND D180_3_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0259 d0 and 04_1067 d0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0259 d0 and 04_1067 d0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0259 d0 and 04_1067 d0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0386 D0 and D540_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0386 D0 and D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0386 D0 and D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0390 D0 and D540_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0390 D0 and D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0390 D0 and D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0424 d0 and d540_normalized_singlets"
+loading R object...
+Done
+write 07_0424 d0 and d540_normalized_debeaded.fcs to empty cdf slot...
+post load
+write 07_0424 d0 and d540_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0425D0 and D180_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0425D0 and D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0425D0 and D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0561 D0 AND D180_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0561 D0 AND D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0561 D0 AND D180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0630 D0 AND 07_0630 D180_normalized_singlets"
+loading R object...
+Done
+write 07_0630 D0 AND 07_0630 D180_normalized_debeaded.fcs to empty cdf slot...
+post load
+write 07_0630 D0 AND 07_0630 D180_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0630 d360 and 07_0630 d540_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0630 d360 and 07_0630 d540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0630 d360 and 07_0630 d540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0663 d360 and 07_0663 d540 _2_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0663 d360 and 07_0663 d540 _2_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0663 d360 and 07_0663 d540 _2_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0692 D0 AND 04_1058 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0692 D0 AND 04_1058 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0692 D0 AND 04_1058 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_0692 d180 and 04_1058 d180_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_0692 d180 and 04_1058 d180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_0692 d180 and 04_1058 d180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_1003 day360 and day540_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07_1003 day360 and day540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_1003 day360 and day540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_1115_1_1-2.1GB_singlets"
+loading R object...
+Done
+write 07_1115_1_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_1115_1_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_1153 D540 AND 07_0811 D540_4_1-2.1GB_singlets"
+loading R object...
+Done
+write 07_1153 D540 AND 07_0811 D540_4_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07_1153 D540 AND 07_0811 D540_4_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07_1158 d360 and 07_1158 d540_normalized_singlets"
+loading R object...
+Done
+write 07_1158 d360 and 07_1158 d540_normalized_debeaded.fcs to empty cdf slot...
+post load
+write 07_1158 d360 and 07_1158 d540_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07-0135 DO AND 09-0406 DO. FCS_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07-0135 DO AND 09-0406 DO. FCS_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07-0135 DO AND 09-0406 DO. FCS_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07-0259 D360 and 04-1067 D360_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07-0259 D360 and 04-1067 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07-0259 D360 and 04-1067 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07-0262 D360 AND 540 27NOV2017_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07-0262 D360 AND 540 27NOV2017_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07-0262 D360 AND 540 27NOV2017_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07-0262 DO AND D180 24NOV2017_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 07-0262 DO AND D180 24NOV2017_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 07-0262 DO AND D180 24NOV2017_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "07-0692 D360 AND 04-1058 D360_normalized_singlets"
+loading R object...
+Done
+write 07-0692 D360 AND 04-1058 D360_normalized_debeaded.fcs to empty cdf slot...
+post load
+write 07-0692 D360 AND 04-1058 D360_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "09_0314 D0 AND 01_0978 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 09_0314 D0 AND 01_0978 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 09_0314 D0 AND 01_0978 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "09_0453 d0 and 09_0745 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 09_0453 d0 and 09_0745 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 09_0453 d0 and 09_0745 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "09_0467 d0 and 09_0278 d0_normalized_singlets"
+loading R object...
+Done
+write 09_0467 d0 and 09_0278 d0_normalized_debeaded.fcs to empty cdf slot...
+post load
+write 09_0467 d0 and 09_0278 d0_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "09_0507 d0 09_0587 d0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 09_0507 d0 09_0587 d0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 09_0507 d0 09_0587 d0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "09_0569 D0 and 09_0529 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 09_0569 D0 and 09_0529 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 09_0569 D0 and 09_0529 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "09_0789 D0 AND 09_0712 D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 09_0789 D0 AND 09_0712 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 09_0789 D0 AND 09_0712 D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "29NOV2017 07-0080D360 AND 07-0080 D540_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 29NOV2017 07-0080D360 AND 07-0080 D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 29NOV2017 07-0080D360 AND 07-0080 D540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "30NOV2017 07-0080 DAY0 AND 07-0080 DAY180_normalized-2.1GB_singlets"
+loading R object...
+Done
+write 30NOV2017 07-0080 DAY0 AND 07-0080 DAY180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write 30NOV2017 07-0080 DAY0 AND 07-0080 DAY180_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "frozen 07_0060 d180 and 04_0699 d180_6_1-2.1GB_singlets"
+loading R object...
+Done
+write frozen 07_0060 d180 and 04_0699 d180_6_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write frozen 07_0060 d180 and 04_0699 d180_6_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "FROZEN 20FEB TO 09MAR_ 07_1153 D360 AND 07_0811 D360_normalized-2.1GB_singlets"
+loading R object...
+Done
+write FROZEN 20FEB TO 09MAR_ 07_1153 D360 AND 07_0811 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write FROZEN 20FEB TO 09MAR_ 07_1153 D360 AND 07_0811 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "FROZEN_04_1241 d360 and 07_0119 d360_normalized_singlets"
+loading R object...
+Done
+write FROZEN_04_1241 d360 and 07_0119 d360_normalized_debeaded.fcs to empty cdf slot...
+post load
+write FROZEN_04_1241 d360 and 07_0119 d360_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "FROZEN_07_0060 D0 AND 04_0699D0_normalized-2.1GB_singlets"
+loading R object...
+Done
+write FROZEN_07_0060 D0 AND 04_0699D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write FROZEN_07_0060 D0 AND 04_0699D0_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "FROZEN 20FEB TO 09MAR_ 07_1153 D360 AND 07_0811 D360_normalized-2.1GB_singlets"
+loading R object...
+Done
+write FROZEN 20FEB TO 09MAR_ 07_1153 D360 AND 07_0811 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write FROZEN 20FEB TO 09MAR_ 07_1153 D360 AND 07_0811 D360_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "FROZEN_04_1241 d360 and 07_0119 d360_normalized_singlets"
+loading R object...
+Done
+write FROZEN_04_1241 d360 and 07_0119 d360_normalized_debeaded.fcs to empty cdf slot...
+post load
+write FROZEN_04_1241 d360 and 07_0119 d360_normalized_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "in beads for 10 days 07-0259 day540 and 04-1067 day 540_normalized-2.1GB_singlets"
+loading R object...
+Done
+write in beads for 10 days 07-0259 day540 and 04-1067 day 540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write in beads for 10 days 07-0259 day540 and 04-1067 day 540_normalized-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+[1] "miguel-from_r-06_0127 and 06_0127b_5_1-2.1GB_singlets"
+loading R object...
+Done
+write miguel-from_r-06_0127 and 06_0127b_5_1-2.1GB_debeaded.fcs to empty cdf slot...
+post load
+write miguel-from_r-06_0127 and 06_0127b_5_1-2.1GB_debeaded.fcs to empty cdf slot...
+post gate
+post yield
+post plot_1
+post plot_2
+post plot_2
+saving ncdf...
+saving R object...
+Done
+To reload it, use 'load_ncfs' function
+
+post save
+minutes_to_run.elapsed 
+                  69.1 

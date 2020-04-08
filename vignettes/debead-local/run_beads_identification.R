@@ -2,63 +2,43 @@
 # PREPARATION 
 # ====================================
 
-# libraries
-library(doParallel)
-
-# function to run in parallel
-do_rpt <- function(r, rmd) {
-  
-  require(rmarkdown)
-  
-  tf <- tempfile()
-  dir.create(tf)
-  
-  result <- try(rmarkdown::render(input=rmd,
-                                  output_file=r$out,
-                                  intermediates_dir=tf,
-                                  params=r$params,
-                                  quiet=TRUE))
-  unlink(tf)
-  
-  ifelse(class(result == "try-error" ), r$out, NA)
-}
-
-
 # directories
 dir_base <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/Missing Normalised CyTOF Data"
-dir_data_norm <- file.path(dir_base, "normalised")
 dir_data_debeaded <- file.path(dir_base, "debeaded")
 
 # files to run debeading algorithm for
-n_fcs <- length(list.files(file.path(dir_data_norm, "fcs")))
-ind_end <- n_fcs
-ind_start <- n_fcs - 1
-ind_vec <- c( ind_start, ind_end )
-ind_vec <- which( purrr::map( stringr::str_detect( list.files( path_in ), "01_0673 d0 09_0462 d0 _1_1" ) ) )
+fcs_vec <- list.files(file.path(dir_base, "normalised", "fcs"))
 
-repeats_list <- purrr::map(seq_along(list.files(file.path(dir_data_norm, "fcs"))), \
-                           function(file_name){
+# ====================================
+# DEBEAD
+# ====================================
+
+purrr::walk(seq_along(fcs_vec)[1:2], function(i){
   
-  param_list <-list(i = i)
+  param_list <- list(i = i)
   
-  list( out = paste0( stringr::str_sub( file_name, end = -5 ), 
-					  "-", mem, "GB",
-                      "-debeading.html" ), 
-        params = list(i = i) )
+  path_rmd <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Code/CATALYST/vignettes/debead-local/bead_identification-local.Rmd"
+  path_html <- paste0("C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/Missing Normalised CyTOF Data/processing files/debeading/",
+                      stringr::str_sub(fcs_vec[i], end = -5), ".html")
+  rmarkdown::render(input = path_rmd, 
+                    params = list(i = i), 
+                    output_file = path_html)
 })
 
-registerDoParallel(cores=2)
+# ====================================
+# SAVE OUTPUT AS NCFS FILE
+# ====================================
 
-print( purrr::map( repeats_list, function(x) x$params$fcs ) )
+# get paths to debeaded fcs files
+path_fcs_debeaded_long <- list.files(file.path(dir_data_debeaded, "fcs"), 
+                                full.names = TRUE)
+path_fcs_debeaded_short <- list.files(file.path(dir_data_debeaded, "fcs"), 
+                                     full.names = FALSE)
+path_fcs_debeaded_long <- path_fcs_debeaded_long[str_detect(path_fcs_debeaded_short, 
+                                                            "debeaded")][1:2]
 
-fail_vec <- foreach(r=repeats_list, .combine=c) %dopar% do_rpt(r,"/home/rdxmig002/phd/CATALYST/vignettes/debead/bead_identification.Rmd" ) 
-fail_vec <- fail_vec[!is.na(fail_vec)]
-
-if( length( fail_vec ) == 0 ){
-  cat( "All FCS files were debeaded successfully." )
-} else{
-  cat( "The following FCS files were not debeaded succesfully:")
-  cat( fail_vec )
-}
-
-c( "time_end" = proc.time()[3] - time_start )
+# load debeaded fcs files
+fs <- read.ncdfFlowSet(path_fcs_debeaded_long)
+# save debeaded fcs files as ncfs
+save_ncfs(fs, file.path(dir_data_debeaded, "ncfs"), 
+          overwrite = TRUE) 

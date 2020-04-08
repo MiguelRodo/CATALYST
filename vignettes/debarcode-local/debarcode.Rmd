@@ -1,0 +1,434 @@
+---
+title: "Debarcode"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+params:	
+  reduce: true
+  fn: "01_0782 day0 and day180 06sep2017_normalized-2.1GB_live"
+  gate_list: NULL
+  dir_in: "/scratch/rdxmig002/data/cytof/ncfs/live"
+  dir_out_debarcode: "/scratch/rdxmig002/data/cytof/fcs/debarcode"
+  dir_out_compensate: "/scratch/rdxmig002/data/cytof/fcs/compensate"
+  trans_out: true
+  fixed: true
+---
+
+# `r stringr::str_replace( params$fn, "live", "" )`
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>", message = FALSE, warning = FALSE)
+``` 
+
+```{r reduce_in,resuts = 'asis'}
+cat('\n' )
+if( !params$reduce ) cat( "This was done on the full dataset, i.e. params$reduce == FALSE." )
+if( params$reduce ) cat( "This was done on a reduced dataset, i.e. params$reduce == TRUE." )
+cat( '\n' )
+```
+
+```{r fixed,resuts = 'asis'}
+cat('\n' )
+if( !params$fixed ) cat( "The barcoding cutoffs were estimated on a per-sample basis, i.e. params$fixed == FALSE." )
+if( params$fixed ) cat( "The barcoding cutoffs were fixed,  params$fixed == TRUE." )
+cat( '\n' )
+```
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+filter <- flowCore::filter
+```
+
+```{r bv-gradient}
+# bivariate
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+grad_col_vec <- purrr::map_chr( list( c( 239, 243, 255 ), 
+                                      c( 198,219,239 ), 
+                                      c( 158,202,225 ), 
+                                      c( 107,174,214 ), 
+                                      c( 49,130,189 ),
+                                      c( 8,81,156 ) ), 
+                                function(x){
+                                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                                } )
+if( !params$reduce ){
+  breaks <- c( 1, 1e1, 1e2, 1e3, 1e4, 1e5)
+} else{
+  breaks <- c( 0, 1, 10, 100, 1e3 )
+}
+```
+
+```{r b_bins_bv}
+n_bins_bv <- ifelse( params$reduce, 80, 256 )
+```
+
+```{r function-fr_smpl}
+ex_sample <- function( x, seed = 1, n = 1e6 ){
+  set.seed(seed)
+  if( isClass(x,'flowFrame')){
+    ex <- exprs(x)
+  } else{
+    ex <- x
+  }
+  samp <- sample( 1:nrow( ex ), n, replace = FALSE )
+  ex <- ex[samp,]
+  if( !isClass(x,'flowFrame') ) return( ex )
+  exprs(x) <- ex
+  x
+}
+```
+
+```{r setup-mass_col_vec, include = FALSE}
+get_rgb_col <- function( red, green, blue ){
+  rgb( red = red / 256, green = green / 256, blue = blue / 256 )
+}
+mass_col_vec <- purrr::map_chr( list( c( 27, 158, 119 ), 
+                      c( 217, 95, 2 ), 
+                      c( 117, 112, 179 ), 
+                      c( 231, 41, 138 ), 
+                      c( 102, 166, 30 ) ), 
+                function(x){
+                  get_rgb_col( x[[1]], x[[2]], x[[3]])
+                } ) %>%
+  setNames( c( "113", "115", "108", "198", "209" ) )
+```
+
+```{r data}
+path_ncfs <- file.path( params$dir_in, params$fn )
+fs <- load_ncfs( path_ncfs )
+fr <- fs[[1]]
+```
+
+```{r reduce,eval=params$reduce}
+fr <- ex_sample(fr,n=1e5)
+```
+
+```{r db_tbl}
+# create debarcoding key
+rep_1 <- function(x) rep(1,x)
+rep_0 <- function(x) rep(0,x)
+
+db_tbl <- data.frame( `113` = c( rep_1(4), rep_0(6) ), 
+                          `115` = c( 1, rep_0(3), rep_1(3), rep_0(3) ), 
+                          `108` = c( 0, 1, rep_0(2), 1, rep_0(2), rep_1(2), 0 ), 
+                          `198` = c( rep_0(2), 1, rep_0(2), 1, 0, 1, 0, 1 ), 
+                          `209` = c( rep_0(3), 1, rep_0(2), 1, 0, rep_1(2) ), 
+                      check.names = FALSE)
+
+stim_vec <- c( "uns", "p1", "p4", "mtbaux", "ebv" )
+rownames( db_tbl ) <- c( paste0( "pid1_", stim_vec ), 
+                         paste0( "pid2_", stim_vec ) )
+```
+
+# Barcode Assignment
+
+Preliminary barcode assignment. 
+```{r prelim_assign,message = FALSE}
+re0 <- assignPrelim( x = fr, y = db_tbl, verbose = TRUE, trans = FALSE, norm_first = TRUE ) 
+message( "post preliminary assignment")
+re0
+```
+
+Estimate cutoffs, if chosen to do so.
+```{r est_cutoff,message = FALSE}
+if( !params$fixed ){
+  re0 <- estCutoffs( x = re0 )
+} else re <- re0
+message("post estimating cutoffs")
+```
+
+Apply cutoffs.
+```{r apply_cutoff,message = FALSE}
+mhl_cutoff( re ) <- 5
+if( !params$fixed ){
+  re <- applyCutoffs( x = re )
+} else re <- applyCutoffs( x = re, sep_cutoff = 0.25 )
+re
+message("post applying cutoffs")
+```
+
+```{r setup-range_list}
+expr_mat <- exprs(fr)
+range_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = TRUE ]
+  c( min( expr_mat_curr ), setNames( quantile( expr_mat_curr, 0.9999 ), NULL ) )
+} ) %>%
+  setNames( colnames( db_tbl))
+```
+
+# Yields
+Below are histograms of the separations of the cells for each barcode group, along with the yield for each separation cutoff. 
+
+```{r bc-f-f-yields}
+for( bc in rownames( db_tbl ) ){
+  print( plotYields( x = re, which = bc, plotly = FALSE ) )
+}
+```
+
+# Post-debarcoding
+
+# Positive bivariate populations
+
+```{r bc-f-f-dbn-biv, results = 'asis', fig.height = 3}
+expr_mat <- exprs(re)
+id_vec <- bc_ids(re)
+uni_id_vec <- sort( unique(id_vec) )
+uni_id_vec <- uni_id_vec[ uni_id_vec != "0"]
+get_bc_pair_db_tbl <- function( x ){ # get the positive bc markers for a given combo
+  curr_row <- which( rownames( db_tbl ) == x )
+  colnames( db_tbl )[ which( db_tbl[curr_row,] == 1 ) ]
+}
+get_bc_expr_tbl_ind <- function( x ){ # get the expr tbl column indices for a given combo of masses
+  purrr::map_int( x, function( y ) which( stringr::str_detect( colnames( expr_mat ), y ) ) )
+}
+get_bc_expr_tbl <- function( x, expr ){
+  mass_vec_curr <- get_bc_pair_db_tbl( x )
+  expr_ind_vec_curr <- get_bc_expr_tbl_ind( mass_vec_curr )
+  expr[,expr_ind_vec_curr ]
+}
+purrr::walk( uni_id_vec, function(id){
+  expr_mat_curr <- expr_mat[ id_vec == id, ]
+  expr_mat_curr <- get_bc_expr_tbl( id, expr = expr_mat_curr )
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+  mass_vec <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  range_list_curr <- list( range_list[[mass_vec[1]]], 
+                           range_list[[mass_vec[2]]])
+  p0 <- ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr )[1] ), 
+                               y = !!sym( colnames( expr_tbl_curr )[2] ) ) ) +
+    geom_hex( bins = n_bins_bv ) +
+	  scale_fill_gradientn( trans = "log10", 
+		 			                breaks = breaks,
+	 				                colours = grad_col_vec ) +
+    expand_limits( x = range_list_curr[[1]], 
+                   y = range_list_curr[[2]]) +
+    coord_equal()
+  cat("\n")
+  pander::pandoc.header( id, level = 3 )
+  cat("\n")
+  print( p0 ) 
+  cat("\n")
+  } )
+```
+
+# Per-cell barcoding marker expression
+
+```{r bc-f-f-events, fig.height = 4}
+purrr::walk( uni_id_vec, function(id) plotEvents( x = re, which = id, n_events = 25 ) )
+```
+
+# All univariate populations
+
+```{r bc-f-f-init_range}
+expr_mat <- exprs(re)
+range_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = TRUE ]
+  c( min( expr_mat_curr ), setNames( quantile( expr_mat_curr, 0.9999 ), NULL ) )
+} ) %>%
+  setNames( colnames( db_tbl ) )
+```
+
+```{r bc-f-f-dbn,fig.height = 6, results = 'asis'}
+expr_mat <- exprs(re)
+plot_list <- purrr::map( colnames( db_tbl ), function( mass ){
+  expr_mat_curr <- expr_mat[ , stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+  expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+  mass <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+    geom_density( fill = mass_col_vec[mass] )
+} )
+cat("\n")
+pander::pandoc.header( "Initial distributions", level = 3 )
+cat("\n")
+cowplot::plot_grid( plotlist = plot_list, ncol = 2 )
+cat("\n")
+```
+
+```{r bc-f-f-dbn-uni, fig.height = 2.5, results = 'asis'}
+expr_mat <- exprs(re)
+id_vec <- bc_ids(re)
+uni_id_vec <- sort( unique(id_vec) )
+uni_id_vec <- uni_id_vec[ uni_id_vec != "0"]
+bc_mass_vec <- colnames( db_tbl )
+get_bc_pair_db_tbl <- function( x ){ # get the positive bc markers for a given combo
+  curr_row <- which( rownames( db_tbl ) == x )
+  colnames( db_tbl )[ which( db_tbl[curr_row,] == 1 ) ]
+}
+get_bc_expr_tbl_ind <- function( x ){ # get the expr tbl column indices for a given combo of masses
+  purrr::map_int( x, function( y ) which( stringr::str_detect( colnames( expr_mat ), y ) ) )
+}
+get_bc_expr_tbl <- function( x, expr ){
+  mass_vec_curr <- get_bc_pair_db_tbl( x )
+  expr_ind_vec_curr <- get_bc_expr_tbl_ind( mass_vec_curr )
+  expr[,expr_ind_vec_curr ]
+}
+purrr::walk( uni_id_vec, function(id){
+  pos_mass_vec <- get_bc_pair_db_tbl( x = id )
+  pos_ind_vec <- purrr::map_int( pos_mass_vec, function( mass ){
+    which( bc_mass_vec == mass )
+  } )
+  neg_ind_vec <- purrr::map( bc_mass_vec, function( mass ){
+    if( mass %in% pos_mass_vec ) return( NULL )
+    which( bc_mass_vec == mass )
+  }) %>%
+    purrr::compact() %>%
+    unlist()
+  ordered_mass_vec <- colnames( db_tbl )[ c( pos_ind_vec, neg_ind_vec )]
+  plot_list <- purrr::map( ordered_mass_vec,
+                           function(mass){
+                             expr_mat_curr <- expr_mat[ id_vec == id, stringr::str_detect( colnames( expr_mat ), mass ),drop = FALSE ]
+                             expr_tbl_curr <- tibble::as_tibble( expr_mat_curr )
+                            mass <- stringr::str_replace_all( colnames( expr_tbl_curr ),
+                                        "[[:punct:][:alpha:]]",
+                                        "")
+  range_curr <- range_list[[mass]]
+                             ggplot( expr_tbl_curr, aes( x = !!sym( colnames( expr_tbl_curr ) ) ) ) +
+                               geom_density( fill = mass_col_vec[mass] ) +
+                               expand_limits( x = range_curr ) +
+                               theme( axis.text.x = element_text( angle = 90, 
+                                                                  hjust = 1, 
+                                                                  size = 8), 
+                                      axis.title.y = element_blank(), 
+                                      axis.ticks.y = element_blank(), 
+                                      axis.text.y = element_blank( ))
+                         })
+
+  cat("\n")
+  pander::pandoc.header( id, level = 3 )
+  cat("\n")
+  print( cowplot::plot_grid( plotlist = plot_list, ncol = 3 ) )
+  cat("\n")
+} )
+```
+
+# DNA and Rhodium
+
+```{r function-get_quant}
+get_quant <- function( mkr, quant, mat ){
+  mat <- as.matrix(mat%>%select_if(is.numeric))
+  c( quantile( mat[,mkr ], quant/2 ), 
+     quantile( mat[,mkr], 1-quant/2 ) )
+}
+```
+
+```{r function-plot_dna}
+plot_dna <- function( ex, id ){
+
+  ex_bc <- ex[ id_vec == id, ]
+  ex <- ex[sample(1:nrow(ex),nrow(ex)/10),]
+  ex_bc_tbl <- tibble::as_tibble( ex_bc ) %>%
+    mutate( type = "Post-debarcoding" ) 
+  ex_tbl <- tibble::as_tibble( ex ) %>%
+    mutate( type = "Pre-debarcoding")
+  plot_tbl <- bind_rows( ex_tbl, ex_bc_tbl )
+  range_r <- get_quant( 'Rh103Di', 0.001, ex_tbl )
+  range_i1 <- get_quant( 'Ir191Di', 0.001, ex_tbl )
+  range_i3 <- get_quant( 'Ir193Di', 0.001, ex_tbl )
+  p0 <- ggplot( plot_tbl, aes( x = Ir191Di, fill = type ) ) + 
+    geom_histogram( bins = 128, position = 'dodge' ) +
+    scale_fill_manual( values = c( "Post-debarcoding" = "dodgerblue", 
+                       "Pre-debarcoding" = "orange" ) ) +
+    theme( legend.title = element_blank() )
+  p1 <- ggplot( plot_tbl, aes( x = Ir193Di, fill = type ) ) + 
+    geom_histogram( bins = 128, position = 'dodge' ) +
+    scale_fill_manual( values = c( "Post-debarcoding" = "dodgerblue", 
+                       "Pre-debarcoding" = "orange" ) ) +
+    theme( legend.title = element_blank() )
+  p2 <- ggplot( ex_bc_tbl, aes( x = Ir191Di,y = Ir193Di ) ) + 
+   geom_hex( bins = n_bins_bv ) +
+	 scale_fill_gradientn( trans = "log10", 
+					               breaks = breaks,
+					               colours = grad_col_vec ) +
+    expand_limits( x = range_i1, y = range_i3 )
+  p3 <- ggplot( ex_bc_tbl, aes( x = Rh103Di,y = Ir193Di ) ) + 
+   geom_hex( bins = n_bins_bv ) +
+	 scale_fill_gradientn( trans = "log10", 
+					               breaks = breaks,
+					               colours = grad_col_vec ) +
+    expand_limits( x = range_r, y = range_i3 )
+  p4 <- ggplot( plot_tbl, aes( x = Rh103Di, fill = type ) ) + 
+    geom_histogram( bins = 128, position = 'dodge' ) +
+    scale_fill_manual( values = c( "Post-debarcoding" = "dodgerblue", 
+                       "Pre-debarcoding" = "orange" ) ) +
+    theme( legend.title = element_blank() )
+  
+  cat("\n")
+  pander::pandoc.header( id, level = 3 )
+  cat("\n")
+  print( p0 ) 
+  cat("\n")
+  print( p1 ) 
+  cat("\n")
+  print( p2 ) 
+  cat("\n") 
+  print( p3 ) 
+  cat("\n") 
+  print( p4 ) 
+  cat("\n") 
+}
+```
+
+```{r plot_dna,results='asis'}
+ex <- exprs(re)
+id_vec <- bc_ids(re)
+uni_id_vec <- sort( unique(id_vec) )
+uni_id_vec <- uni_id_vec[ uni_id_vec != "0"]
+id <- uni_id_vec[1]
+purrr::walk( uni_id_vec, function(id){
+  plot_dna( ex, id )
+} )
+```
+
+```{r out_fcs, eval = !is.null( params$dir_out_debarcode) }
+if( params$trans_out ){
+  ex <- exprs(re)
+  ex <- 5 * sinh(ex)
+  re@exprs <- ex
+}
+out_prefix <- stringr::str_replace( params$fn, ".fcs", "") %>%
+  stringr::str_replace( "live", "" )
+out_nms <- stringr::str_c( out_prefix, "-", rownames( bc_key(re) ) )
+dir_out_debarcode <- ifelse( params$fixed, 
+							 paste0( params$dir_out_debarcode, "-fixed_cutoff" ), 
+				             paste0( params$dir_out_debarcode, "-flexible_cutoff" ) )
+outFCS( x = re, y = fr, out_path = dir_out_debarcode, out_nms <- out_nms ) 
+if( params$trans_out ){
+  ex <- asinh(ex/5)
+  re@exprs <- ex
+}
+```
+
+```{r computeSpillmat, eval = !is.null( params$dir_out_compensate )}
+spillMat <- computeSpillmat(x=re)
+```
+
+```{r plotSpillmat, eval = !is.null( params$dir_out_compensate )}
+bc_ms <- c( 137,138, 140, 161:164, 166:168, 170, 
+151, 153, 144, 155, 156, 158, 160, 165, 
+127, 
+139, 175:176, 142:146, 148, 150, 
+108, 141, 147, 149, 152, 
+154, 159, 169, 89, 171:174 )
+bc_ms <- c( 137,138, 209, 140, 161:164, 166:168, 170, 
+151, 153, 144, 155, 156, 158, 160, 165, 
+127, 113, 115, 191, 193, 
+139, 175:176, 142:146, 148, 150, 
+108, 141, 198, 103,  147, 149, 152, 
+154, 159, 169, 89, 171:174 )
+plotSpillmat( bc_ms = bc_ms, SM = spillMat, plotly = FALSE )
+```
