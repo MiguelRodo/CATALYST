@@ -65,90 +65,89 @@ for(i in 1:2){
   beads_cut <- 1; gamma_cut <- 0.75; int <- 1.7; slope <- 0.7
   
   # adjustments
-  k <- 1
+  k <- 0
   if(batch == "02-0185 DO AND 09-0296 D0 29SEP2017_normalized--time_cut.fcs"){
     gammma_cut <- 1.2
-    k <- 1
+    k <- 0
   } 
   if(batch == "03-0697 D0 and 03-0545 D0_normalized--time_cut.fcs"){
     gamma_cut <- 1.5
-    k <- 1
+    k <- 0
   }
   if(batch == "04_0152 D0 AND 04_0152 D180_normalized--time_cut.fcs"){
-    gamam_cut <- 1.7
-    k <- 1
+    gamma_cut <- 1.7
+    k <- 0
   }
   if(batch == "04_0152 d360 and d540_3_1--time_cut.fcs"){
     gamma_cut <- 1.75
-    k <- 1
+    k <- 0
   }
   if(batch == "04_0695 D360 and 04_0695 D540_normalized_--time_cut.fcs"){
     gamma_cut <- 1.7
-    k <- 1
+    k <- 0
   }
   if(batch == "04_0811D180 AND 07_1153 D180_normalized--time_cut.fcs"){
     gamma_cut <- 1.7
-    k <- 1
+    k <- 0
   }
   if(batch == "04_0910 D540 AND 07_1132 D540_normalized--time_cut.fcs"){
     gamma_cut <- 1.7
-    k <- 1
+    k <- 0
   }
   if(batch == "04_1104 d0 and d180_2_1--time_cut.fcs"){
     gamma_cut <- 1.5
-    k <- 1
+    k <- 0
   }
   if(batch == "04_1241 d180 and 07_0119 d180_normalized_--time_cut.fcs"){
-    gamma_cut <- 1.5; k <- 1
+    gamma_cut <- 1.5; k <- 0
   }
-
-  if(batch == "07-0259 D360 and 04-1067 D360_normalized--time_cut.fcs"){
-    gamam_cut <- 1.8; k <- 1
-  }
-  if(batch == "07-0262 DO AND D180 24NOV2017_normalized--time_cut.fcs"){
-    gamma_cut <- 1.9; k <- 1
+  if(batch == "07-0262 D360 AND 540 27NOV2017_normalized--time_cut.fcs"){
+    gamma_cut <- 1.9; k <- 0
   }
   if(batch == "07-0692 D360 AND 04-1058 D360_normalized_--time_cut.fcs"){
-    gamma_cut <- 1.25; k <- 1
+    gamma_cut <- 1.25; k <- 0
   }
   if(batch == "07_0208 D0 and D540_normalized--time_cut.fcs"){
-    gamma_cut <- 1.25; k <- 1
+    gamma_cut <- 1.25; k <- 0
+  }
+  if(batch == "07-0259 D360 and 04-1067 D360_normalized--time_cut.fcs"){
+    gamma_cut <- 1.75; k <- 0
   }
   if(batch == "07_0214 DE360 and D540_normalized_--time_cut.fcs"){
-    gamma_cut <- 1.5; k <- 1
+    gamma_cut <- 1.5; k <- 0
   }
   if(batch == "07_0259 d0 and 04_1067 d0_normalized--time_cut.fcs"){
-    gamma_cut <- 1.1; k <- 1
+    gamma_cut <- 1.1; k <- 0
   }
   if(batch == "07_0561 D0 AND D180_normalized--time_cut.fcs"){
-    int <- 1.4; gamma_cut <- 1.1; k <- 1
+    int <- 1.4; gamma_cut <- 1.1; k <- 0
   }
   if(batch == "07_0630 D0 AND 07_0630 D180_normalized_--time_cut.fcs"){
-    gamma_cut <- 1.9; k <- 1
+    gamma_cut <- 1.9; k <- 0
   }
   if(batch == "07_0630 d360 and 07_0630 d540_normalized--time_cut.fcs"){
-    gamma_cut <- 1.8; k <- 1
+    gamma_cut <- 1.8; k <- 0
   }
   if(batch == "07_1003 day360 and day540_normalized--time_cut.fcs"){
-    gamma_cut <- 1.75; k <- 1
+    gamma_cut <- 1.75; k <- 0
   }
     if(batch == "07_1115_1_1--time_cut.fcs"){
-  gamma_cut <- 1.25; k <- 1
+  gamma_cut <- 1.25; k <- 0
   }
   if(batch == "09_0453 d0 and 09_0745 D0_normalized--time_cut.fcs"){
-    gamma_cut <- 1.1; k <- 1
+    gamma_cut <- 1.1; k <- 0
   }
   if(batch == "09_0507 d0 09_0587 d0_normalized--time_cut.fcs"){
-    gamma_cut <- 1.75; k <- 1
+    gamma_cut <- 1.75; k <- 0
   }
   if(batch == "30NOV2017 07-0080 DAY0 AND 07-0080 DAY180_normalized--time_cut.fcs"){
-    gamma_cut <- 1; k <- 1
+    gamma_cut <- 1; k <- 0
   }
   if(batch == "frozen 07_0060 d180 and 04_0699 d180_6_1--time_cut.fcs"){
-    gamma_cut <- 1; k <- 1
+    gamma_cut <- 1; k <- 0
   }
   if(batch == "01_0673 d0 09_0462 d0 _1_1--time_cut.fcs"){
-    gamma_cut <- 1; k <- 1
+    gamma_cut <- 1; k <- 0
   }
 
   
