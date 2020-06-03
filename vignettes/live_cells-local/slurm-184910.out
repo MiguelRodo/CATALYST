@@ -1,203 +1,0 @@
-
-
-processing file: live_manual.Rmd
-  |                                                                         |                                                                 |   0%  |                                                                         |.                                                                |   2%
-   inline R code fragments
-
-  |                                                                         |..                                                               |   3%
-label: setup (with options) 
-List of 1
- $ include: logi FALSE
-
-  |                                                                         |...                                                              |   5%
-  ordinary text without R code
-
-  |                                                                         |....                                                             |   7%
-label: unnamed-chunk-1 (with options) 
-List of 1
- $ resuts: chr "asis"
-
-  |                                                                         |......                                                           |   9%
-  ordinary text without R code
-
-  |                                                                         |.......                                                          |  10%
-label: unnamed-chunk-2
-  |                                                                         |........                                                         |  12%
-  ordinary text without R code
-
-  |                                                                         |.........                                                        |  14%
-label: setup-libraries (with options) 
-List of 1
- $ include: logi FALSE
-
-Registered S3 method overwritten by 'R.oo':
-  method        from       
-  throw.default R.methodsS3
-Loading required package: flowWorkspace
-Loading required package: ggplot2
-Loading required package: flowCore
-Loading required package: ncdfFlow
-Loading required package: RcppArmadillo
-Loading required package: BH
-
-Attaching package: 'magrittr'
-
-The following object is masked from 'package:flowWorkspace':
-
-    add
-
-
-Attaching package: 'cowplot'
-
-The following object is masked from 'package:ggplot2':
-
-    ggsave
-
-
-Attaching package: 'purrr'
-
-The following object is masked from 'package:magrittr':
-
-    set_names
-
-
-Attaching package: 'dplyr'
-
-The following object is masked from 'package:ncdfFlow':
-
-    filter
-
-The following object is masked from 'package:flowCore':
-
-    filter
-
-The following objects are masked from 'package:stats':
-
-    filter, lag
-
-The following objects are masked from 'package:base':
-
-    intersect, setdiff, setequal, union
-
-  |                                                                         |..........                                                       |  16%
-  ordinary text without R code
-
-  |                                                                         |...........                                                      |  17%
-label: bv-gradient
-  |                                                                         |............                                                     |  19%
-  ordinary text without R code
-
-  |                                                                         |.............                                                    |  21%
-label: function-getFcsFn
-  |                                                                         |...............                                                  |  22%
-  ordinary text without R code
-
-  |                                                                         |................                                                 |  24%
-label: function-ex_smpl
-  |                                                                         |.................                                                |  26%
-  ordinary text without R code
-
-  |                                                                         |..................                                               |  28%
-label: function-get_line
-  |                                                                         |...................                                              |  29%
-  ordinary text without R code
-
-  |                                                                         |....................                                             |  31%
-label: function-gate_line_ind
-  |                                                                         |.....................                                            |  33%
-  ordinary text without R code
-
-  |                                                                         |......................                                           |  34%
-label: function-gate_line
-  |                                                                         |........................                                         |  36%
-  ordinary text without R code
-
-  |                                                                         |.........................                                        |  38%
-label: function-print_gate
-  |                                                                         |..........................                                       |  40%
-  ordinary text without R code
-
-  |                                                                         |...........................                                      |  41%
-label: unnamed-chunk-3
-  |                                                                         |............................                                     |  43%
-  ordinary text without R code
-
-  |                                                                         |.............................                                    |  45%
-label: unnamed-chunk-4
-  |                                                                         |..............................                                   |  47%
-  ordinary text without R code
-
-  |                                                                         |...............................                                  |  48%
-label: function-plot_gate_joint_mod
-  |                                                                         |................................                                 |  50%
-  ordinary text without R code
-
-  |                                                                         |..................................                               |  52%
-label: unnamed-chunk-5
-  |                                                                         |...................................                              |  53%
-  ordinary text without R code
-
-  |                                                                         |....................................                             |  55%
-label: function-plot_gate
-  |                                                                         |.....................................                            |  57%
-  ordinary text without R code
-
-  |                                                                         |......................................                           |  59%
-label: function-fs_gate
-  |                                                                         |.......................................                          |  60%
-  ordinary text without R code
-
-  |                                                                         |........................................                         |  62%
-label: function-fs_load
-  |                                                                         |.........................................                        |  64%
-  ordinary text without R code
-
-  |                                                                         |...........................................                      |  66%
-label: function-fs_save
-  |                                                                         |............................................                     |  67%
-  ordinary text without R code
-
-  |                                                                         |.............................................                    |  69%
-label: load (with options) 
-List of 1
- $ include: logi FALSE
-
-loading R object...
-Done
-post load
-  |                                                                         |..............................................                   |  71%
-  ordinary text without R code
-
-  |                                                                         |...............................................                  |  72%
-label: gate (with options) 
-List of 1
- $ include: logi FALSE
-
-write 01_0782 day0 and day180 06sep2017_normalized-2.1GB_debeaded.fcs to empty cdf slot...
-post gate
-  |                                                                         |................................................                 |  74%
-  ordinary text without R code
-
-  |                                                                         |.................................................                |  76%
-label: yield (with options) 
-List of 1
- $ results: chr "asis"
-
-  |                                                                         |..................................................               |  78%
-  ordinary text without R code
-
-  |                                                                         |....................................................             |  79%
-label: unnamed-chunk-6 (with options) 
-List of 1
- $ include: logi FALSE
-
-post yield
-  |                                                                         |.....................................................            |  81%
-  ordinary text without R code
-
-  |                                                                         |......................................................           |  83%
-label: plot (with options) 
-List of 1
- $ results: chr "asis"
-
-slurmstepd: error: *** JOB 184910 ON srvcnthpc110 CANCELLED AT 2019-06-30T14:43:25 ***
