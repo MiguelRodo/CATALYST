@@ -1,0 +1,220 @@
+---
+title: "Singlets"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+params:
+  i: 1
+  trans: true
+  reduce: true
+  dir_base: "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/Missing Normalised CyTOF Data"
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>", message = FALSE, warning = FALSE)
+``` 
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+# library(CATALYST)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+devtools::load_all()
+```
+
+```{r setup-data}
+dir_ncfs_debeaded <- file.path(params$dir_base, "debeaded", "ncfs")
+fs_debeaded <- load_ncfs(dir_ncfs_debeaded)
+```
+
+```{r get_plots_and_gate}
+# =======================================
+# Preparation 
+# =======================================
+
+#get FlowFrame
+fr <- fs_debeaded[[params$i]]
+
+message('start of function')
+# extract expression matrix
+ex <- exprs(fr)
+message('post load expression matrix')
+# transform and reduce if need be
+if(params$reduce){
+  samp <- sample(1:nrow(ex), min(nrow(ex), 1e3), replace = FALSE)
+  ex <- ex[samp,]
+}
+message('post reduce')
+if(params$trans ) ex <- asinh(ex/5)
+message('post trans')
+
+# re-assign to fr (needed for flowClust gates)
+exprs(fr) <- ex
+
+# list to store plots init
+#plot_list <- list()
+
+# get title for plots
+title <- fr@description$FILENAME %>% str_sub(start = 108)
+message('post all prep')
+# =======================================
+#  BV plot of initial data
+# =======================================
+
+# ex_old <- tibble(Ir191Di = ex_old[,"Ir191Di"], Ir191Di = ex_old[,"Ir193Di"])
+xlim_debeaded <- c(0, max(ex[,"Ir191Di"]))
+ylim_debeaded <- c(0, max(ex[,"Ir193Di"]))
+ggplot(as.data.frame(ex[,c("Ir191Di", "Ir193Di")]), 
+                                     aes(x = Ir191Di,
+                                         y = Ir193Di)) + 
+  geom_hex(bins = 128, show.legend = FALSE) +
+  expand_limits(x = xlim_debeaded, 
+                y = ylim_debeaded) +
+  scale_fill_viridis_c(trans = 'log10') +
+  lims(x = range(ex[,"Ir191Di"]), y = range(ex[,"Ir193Di"])) +
+  background_grid() +
+  labs(title = paste0(title, "\nIr193Di against Ir191Di post debeading"))
+message('post init plot')
+# =======================================
+#  Elliptical gate
+# =======================================
+
+singlets_fc_gate <- openCytoFork::flowClust.2d(ex, 
+                                    xChannel = "Ir191Di", 
+                                    yChannel = "Ir193Di", 
+                                    filterId = "singlet_fc",
+                                    K = 2, 
+                                    quantile = 0.85, 
+                                    target = c(6, 6), 
+                                    eigen_stretch = c(1,30))
+fr_singlets_fc_gate <- flowCore::filter(fr, singlets_fc_gate)
+ex <- ex[fr_singlets_fc_gate@subSet,]
+message('post ellipse gate')
+
+# =======================================
+#  BV plot of data post ellipse gate
+# =======================================
+
+# ex_old <- tibble(Ir191Di = ex_old[,"Ir191Di"], Ir191Di = ex_old[,"Ir193Di"])
+ggplot(as.data.frame(ex[,c("Ir191Di", "Ir193Di")]), 
+                                     aes(x = Ir191Di,
+                                         y = Ir193Di)) + 
+  geom_hex(bins = 128, show.legend = FALSE) +
+  scale_fill_viridis_c(trans = 'log10') +
+  lims(x = xlim_debeaded, y = ylim_debeaded) +
+  background_grid() +
+  labs(title = paste0(title, "\nIr193Di against Ir191Di post ellipse gate"))
+
+message('post ellipse gate plot')
+# =======================================
+#  UV plot of data with cutoffs
+# =======================================
+
+# create table of restrictions
+file_vec <- c(
+  "07_0177 d360 and 07_0177 d540_cells_found_normalized_debeaded.fcs",
+  "07_0663 D0 AND 07_0663 D180_cells_found_normalized_debeaded.fcs")
+
+plot_var_vec <- c("Ir191Di", "Ir193Di")
+restriction_tbl <- tibble(file = rep(file_vec, each = 2), 
+                          plot_var = rep(plot_var_vec, 2), 
+                          min = c(3.75, 4.25, 3.2, 3.5), 
+                          max = c(4.9, 5.5, 4.4, 5))
+
+# plot
+map(c("Ir191Di", "Ir193Di"), function(plot_var){
+  restriction_tbl_plot <- restriction_tbl %>% 
+                 dplyr::filter(.data$plot_var == .env$plot_var & 
+                                 file == title)
+  ggplot(as.data.frame(ex[,c("Ir191Di", "Ir193Di")]), aes(x = !!ensym(plot_var))) +
+    geom_histogram(bins = 100, fill = 'gray85', col = 'black') + 
+    labs(title = title) + 
+    scale_x_continuous(limits = c(0, 9)) +
+    geom_vline(data = restriction_tbl_plot, 
+               aes(xintercept = min), col = "red", size = 1) +
+    geom_vline(data = restriction_tbl_plot, 
+                   aes(xintercept = max), col = "red", size = 1) +
+        theme_cowplot() +
+        background_grid(major = 'xy')
+}) %>%
+  setNames(paste0('straight_uv-', c("Ir191Di", "Ir193Di")))
+
+#if(class(plot_list_uv) != 'try-error'){
+# plot_list <- plot_list %>%
+#  append(list(`straight_uv-Ir191Di` = plot_list_uv[[1]], 
+#              `straight_uv-Ir193Di` = plot_list_uv[[2]])) 
+#}
+
+
+message('post uv straight gate plot')
+
+# =======================================
+#  BV plot of data with cutoffs
+# =======================================
+
+#message(title)
+ggplot(as.data.frame(ex[,c("Ir191Di", "Ir193Di")]), 
+       aes(x = Ir191Di, y = Ir193Di)) + 
+  geom_hex() + 
+  scale_fill_viridis_c(trans = 'log10') +
+  labs(title = title) + 
+  coord_equal(xlim = c(2.5,7.5), ylim = c(2.5,7.5)) +
+  geom_vline(data = restriction_tbl %>% 
+               dplyr::filter(file == title & 
+                               plot_var == "Ir191Di"), 
+             aes(xintercept = max), col = "red", size = 1) +
+  geom_vline(data = restriction_tbl %>% 
+               dplyr::filter(file == title & 
+                               plot_var == "Ir191Di"), 
+             aes(xintercept = min), col = "red", size = 1) +
+ geom_hline(data = restriction_tbl %>% 
+              dplyr::filter(file == title & 
+                          plot_var == "Ir193Di"), 
+          aes(yintercept = max), col = "red", size = 1) +
+ geom_hline(data = restriction_tbl %>% 
+              dplyr::filter(file == title & 
+                          plot_var == "Ir193Di"), 
+          aes(yintercept = min), col = "red", size = 1) +
+  theme_cowplot() +
+  background_grid(major = 'xy')
+
+message('post bv straight gate plot')
+
+# =======================================
+#  Apply straight gates
+# =======================================
+
+rest_tbl_curr <- restriction_tbl %>%
+  dplyr::filter(file == title)
+ex <- ex[ex[,"Ir191Di"] > rest_tbl_curr$min[1] & 
+           ex[,"Ir191Di"] < rest_tbl_curr$max[1] & 
+           ex[,"Ir193Di"] > rest_tbl_curr$min[2] & 
+           ex[,"Ir193Di"] < rest_tbl_curr$max[2],]
+
+message('post apply straight gate')
+
+# =======================================
+#  Output
+# =======================================
+
+# save plot_list to global environment
+#assign(paste0(title, "-plot_list"), plot_list, envir = globalenv())
+
+# transform back if need be
+if(params$trans) ex <- 5 * sinh(ex)
+
+# save new expression matrix to FlowFrame
+exprs(fr) <- ex
+
+# write to FCS file
+path_fcs_save <- file.path(params$dir_base, "singlets", "fcs")
+if(!dir.exists(path_fcs_save)) dir.create(path_fcs_save, recursive = TRUE)
+write.FCS(x = fr, filename = file.path(path_fcs_save, title))
+```

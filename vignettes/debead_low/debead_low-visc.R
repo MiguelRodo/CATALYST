@@ -1,0 +1,224 @@
+# ====================================
+# Set-up
+# ====================================
+
+# DIRECTORY PARAMETERS
+# --------------------------------
+
+# directory containing the fcs files
+dir_fcs_in <-  "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/time_cut"
+# directory to save debeaded files to
+dir_fcs_out <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/test_debead"
+# directory to save plots to
+dir_plot <-  "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/test_debead"
+
+# libraries
+library(CytoML)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+
+filter <- dplyr::filter
+
+# get paths to fcs files
+fcs_vec_in <- list.files(dir_fcs_in, full.names = TRUE)
+
+# get batch of each fcs file
+batch_vec_in <- list.files(dir_fcs_in, full.names = FALSE) %>%
+  str_remove("_mtbaux") %>%
+  str_remove("_uns") %>%
+  str_remove("_p1") %>%
+  str_remove("_p4") %>%
+  str_remove("_ebv") %>%
+  str_remove("pid1") %>%
+  str_remove("pid2")
+
+# ============================
+# Debead batch-by-batch
+# ============================
+
+# edit batch by batch
+walk(unique(batch_vec_in), function(batch){
+  message(batch)
+  message(which(unique(batch_vec_in) == batch))
+  
+  # Set debeading parameters
+  # -------------------------------------
+  
+  # set default parameters for debeading
+  beads_cut <- 1; gamma_cut <- 0.75; int <- 1.7; slope <- 0.7
+  
+  # adjust defaults if need be
+  if(batch == "02-0185 DO AND 09-0296 D0 29SEP2017_normalized--time_cut.fcs"){
+    gammma_cut <- 1.2
+  } 
+  if(batch == "03-0697 D0 and 03-0545 D0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.5
+  }
+  if(batch == "04_0152 D0 AND 04_0152 D180_normalized--time_cut.fcs"){
+    gamam_cut <- 1.7
+  }
+  if(batch == "04_0152 d360 and d540_3_1--time_cut.fcs"){
+    gamma_cut <- 1.75
+  }
+  if(batch == "04_0695 D360 and 04_0695 D540_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.7
+  }
+  if(batch == "04_0811D180 AND 07_1153 D180_normalized--time_cut.fcs"){
+    gamma_cut <- 1.7
+  }
+  if(batch == "04_0910 D540 AND 07_1132 D540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.7
+  }
+  if(batch == "04_1104 d0 and d180_2_1--time_cut.fcs"){
+    gamma_cut <- 1.5
+  }
+  if(batch == "04_1241 d180 and 07_0119 d180_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.5
+  }
+  
+  if(batch == "07-0259 D360 and 04-1067 D360_normalized--time_cut.fcs"){
+    gamma_cut <- 1.8
+  }
+  if(batch == "07-0262 DO AND D180 24NOV2017_normalized--time_cut.fcs"){
+    gamma_cut <- 1.9
+  }
+  if(batch == "07-0692 D360 AND 04-1058 D360_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.25
+  }
+  if(batch == "07_0208 D0 and D540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.25
+  }
+  if(batch == "07_0214 DE360 and D540_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.5
+  }
+  if(batch == "07_0259 d0 and 04_1067 d0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.1
+  }
+  if(batch == "07_0561 D0 AND D180_normalized--time_cut.fcs"){
+    int <- 1.4; gamma_cut <- 1.1
+  }
+  if(batch == "07_0630 D0 AND 07_0630 D180_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.9
+  }
+  if(batch == "07_0630 d360 and 07_0630 d540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.8
+  }
+  if(batch == "07_1003 day360 and day540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.75
+  }
+  if(batch == "07_1115_1_1--time_cut.fcs"){
+    gamma_cut <- 1.25
+  }
+  if(batch == "09_0453 d0 and 09_0745 D0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.1
+  }
+  if(batch == "09_0507 d0 09_0587 d0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.75
+  }
+  if(batch == "30NOV2017 07-0080 DAY0 AND 07-0080 DAY180_normalized--time_cut.fcs"){
+    gamma_cut <- 1
+  }
+  if(batch == "frozen 07_0060 d180 and 04_0699 d180_6_1--time_cut.fcs"){
+    gamma_cut <- 1
+  }
+  if(batch == "01_0673 d0 09_0462 d0 _1_1--time_cut.fcs"){
+    gamma_cut <- 1
+  }
+  
+  # Read in data
+  # -----------------------------
+  
+  # fcs files in batch
+  fcs_ind <- which(batch_vec_in == batch)
+  fs_in <- read.flowSet(fcs_vec_in[fcs_ind], 
+                        transformation = FALSE)
+  
+  # load data
+  stim_lab_vec <- c('ebv', 'mtbaux', 'p1', 'p4', 'uns')
+  # join expression matrices together
+  ex <- map_df(seq_along(fs_in), function(i){
+    fr <- fs_in[[i]]
+    stim <- stim_lab_vec[i - (i %/% 5) * 5]
+    if(length(stim) == 0) stim <- 'uns'
+    exprs(fr) %>% 
+      divide_by(5) %>%
+      asinh %>%
+      as_tibble %>%
+      mutate(ind = i) %>%
+      mutate(stim = .env$stim)
+  })
+  
+  # Create plot of IFNg vs beads before debeading
+  # ------------------------------------------
+  
+  p0 <- ggplot(ex %>% 
+                 filter(Ce140Di > min(Ce140Di),
+                        Ho165Di > min(Ho165Di)), 
+               aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title = "Live singlets")
+  
+  
+  # Remove beads
+  # ------------------------------------------
+  
+  ex_rep <- ex %>%
+    filter(!(Ce140Di > beads_cut & Ho165Di > gamma_cut & ((int + slope * Ce140Di) > Ho165Di) ))
+  
+  perc_removed <- (1 - nrow(ex_rep)/nrow(ex)) * 100
+  
+  # Create plot of IFNg vs beads after debeading
+  # ------------------------------------------
+  
+  p1 <- ggplot(ex_rep %>% 
+                 filter(Ce140Di > min(Ce140Di),
+                        Ho165Di > min(Ho165Di)), 
+               aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title =  paste0("Live singlets - Post filtering (removed ",
+                                                  round(perc_removed, 2), "% of live singlets)"))
+  
+  # create single plot of before and after
+  p <- cowplot::plot_grid(p0, p1, ncol = 2)
+  
+  # save plot
+  if(!dir.exists(dir_plot)) dir.create(dir_plot, recursive = TRUE)
+  cowplot::ggsave2(file.path(dir_plot, paste0(batch, ".png")), plot = p, 
+                   height = 10, width = 20, units = 'cm')
+  
+  # Save debeaded fcs files
+  # ------------------------------------------
+  
+  if(!dir.exists(dir_fcs_out)) dir.create(dir_fcs_out,
+                                                 recursive = TRUE)
+  walk(seq_along(fs_in), function(i){
+    fr <- fs_in[[i]]
+    exprs(fr) <- ex_rep %>%
+      filter(ind == i) %>%
+      select(-c(ind, stim)) %>%
+      as.matrix %>%
+      sinh %>%
+      multiply_by(5)
+    
+    write.FCS(fr, filename = file.path(dir_fcs_out, fr@description$GUID))
+  })
+})

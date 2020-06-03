@@ -1,0 +1,565 @@
+---
+title: "Debead intermediate beads"
+author: "Miguel Rodo"
+date: "06 June 2019"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, comment = "#>", message = FALSE, warning = FALSE)
+``` 
+
+```{r setup-libraries, include = FALSE}
+library(CytoML)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+
+filter <- dplyr::filter
+```
+
+```{r remove beads, eval = TRUE, message = FALSE}
+for(i in 1:2){
+  if(i == 1){
+    # Original data
+    dir_base <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data"
+    dir_fcs_in <- file.path(dir_base, "time_cut")
+    fcs_vec_in <- list.files(dir_fcs_in, full.names = TRUE)
+    batch_vec_in <- list.files(dir_fcs_in, full.names = FALSE) %>%
+      str_remove("_mtbaux") %>%
+      str_remove("_uns") %>%
+      str_remove("_p1") %>%
+      str_remove("_p4") %>%
+      str_remove("_ebv") %>%
+      str_remove("pid1") %>%
+      str_remove("pid2")
+  }
+  if(i == 2){
+    # Missing cytof files
+    dir_base <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/Missing Normalised CyTOF Data"
+    dir_fcs_in <- file.path(dir_base, "debarcoded", "fcs")
+    fcs_vec_in <- list.files(dir_fcs_in, full.names = TRUE)
+    batch_vec_in <- list.files(dir_fcs_in, full.names = FALSE) %>%
+      str_remove("_mtbaux") %>%
+      str_remove("_uns") %>%
+      str_remove("_p1") %>%
+      str_remove("_p4") %>%
+      str_remove("_ebv") %>%
+      str_remove("pid1") %>%
+      str_remove("pid2")
+  }
+  walk(unique(batch_vec_in), function(batch){
+  message(batch)
+  message(which(unique(batch_vec_in) == batch))
+  
+  # Set gates
+  # -------------------------------------
+  
+  # beads_cut, gamma_cut, int and slope
+  beads_cut <- 1; gamma_cut <- 0.75; int <- 1.7; slope <- 0.7
+  
+  # adjustments
+  k <- 1
+  if(batch == "02-0185 DO AND 09-0296 D0 29SEP2017_normalized--time_cut.fcs"){
+    gammma_cut <- 1.2
+    k <- 1
+  } 
+  if(batch == "03-0697 D0 and 03-0545 D0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.5
+    k <- 1
+  }
+  if(batch == "04_0152 D0 AND 04_0152 D180_normalized--time_cut.fcs"){
+    gamam_cut <- 1.7
+    k <- 1
+  }
+  if(batch == "04_0152 d360 and d540_3_1--time_cut.fcs"){
+    gamma_cut <- 1.75
+    k <- 1
+  }
+  if(batch == "04_0695 D360 and 04_0695 D540_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.7
+    k <- 1
+  }
+  if(batch == "04_0811D180 AND 07_1153 D180_normalized--time_cut.fcs"){
+    gamma_cut <- 1.7
+    k <- 1
+  }
+  if(batch == "04_0910 D540 AND 07_1132 D540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.7
+    k <- 1
+  }
+  if(batch == "04_1104 d0 and d180_2_1--time_cut.fcs"){
+    gamma_cut <- 1.5
+    k <- 1
+  }
+  if(batch == "04_1241 d180 and 07_0119 d180_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.5; k <- 1
+  }
+
+  if(batch == "07-0259 D360 and 04-1067 D360_normalized--time_cut.fcs"){
+    gamam_cut <- 1.8; k <- 1
+  }
+  if(batch == "07-0262 DO AND D180 24NOV2017_normalized--time_cut.fcs"){
+    gamma_cut <- 1.9; k <- 1
+  }
+  if(batch == "07-0692 D360 AND 04-1058 D360_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.25; k <- 1
+  }
+  if(batch == "07_0208 D0 and D540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.25; k <- 1
+  }
+  if(batch == "07_0214 DE360 and D540_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.5; k <- 1
+  }
+  if(batch == "07_0259 d0 and 04_1067 d0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.1; k <- 1
+  }
+  if(batch == "07_0561 D0 AND D180_normalized--time_cut.fcs"){
+    int <- 1.4; gamma_cut <- 1.1; k <- 1
+  }
+  if(batch == "07_0630 D0 AND 07_0630 D180_normalized_--time_cut.fcs"){
+    gamma_cut <- 1.9; k <- 1
+  }
+  if(batch == "07_0630 d360 and 07_0630 d540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.8; k <- 1
+  }
+  if(batch == "07_1003 day360 and day540_normalized--time_cut.fcs"){
+    gamma_cut <- 1.75; k <- 1
+  }
+    if(batch == "07_1115_1_1--time_cut.fcs"){
+  gamma_cut <- 1.25; k <- 1
+  }
+  if(batch == "09_0453 d0 and 09_0745 D0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.1; k <- 1
+  }
+  if(batch == "09_0507 d0 09_0587 d0_normalized--time_cut.fcs"){
+    gamma_cut <- 1.75; k <- 1
+  }
+  if(batch == "30NOV2017 07-0080 DAY0 AND 07-0080 DAY180_normalized--time_cut.fcs"){
+    gamma_cut <- 1; k <- 1
+  }
+  if(batch == "frozen 07_0060 d180 and 04_0699 d180_6_1--time_cut.fcs"){
+    gamma_cut <- 1; k <- 1
+  }
+  if(batch == "01_0673 d0 09_0462 d0 _1_1--time_cut.fcs"){
+    gamma_cut <- 1; k <- 1
+  }
+
+  
+
+  if(k == 0) return(invisible(TRUE))
+  
+  # Data
+  # -----------------------------
+  
+  # fcs files in batch
+  fcs_ind <- which(batch_vec_in == batch)
+  fs_in <- read.flowSet(fcs_vec_in[fcs_ind], 
+                        transformation = FALSE)
+  
+  # load data
+  stim_lab_vec <- c('ebv', 'mtbaux', 'p1', 'p4', 'uns')
+  ex <- map_df(seq_along(fs_in), function(i){
+    fr <- fs_in[[i]]
+    stim <- stim_lab_vec[i - (i %/% 5) * 5]
+    if(length(stim) == 0) stim <- 'uns'
+    exprs(fr) %>% 
+      divide_by(5) %>%
+      asinh %>%
+      as_tibble %>%
+      mutate(ind = i) %>%
+      mutate(stim = .env$stim)
+    })
+  
+
+
+
+  # Base plot
+  # ------------------------------------------
+  
+  message('pre base plot')
+  p0 <- ggplot(ex %>% 
+         filter(Ce140Di > min(Ce140Di),
+                Ho165Di > min(Ho165Di)), 
+       aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title = "Live singlets")
+  
+  # Base plot - stim vs uns
+  # ------------------------------------------
+  
+  message('pre base plot - stim')
+  
+  p0_uns <- ggplot(ex %>% 
+                     filter(stim == 'uns') %>%
+         filter(Ce140Di > min(Ce140Di),
+                Ho165Di > min(Ho165Di)), 
+       aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title = "Live singlets - unstim")
+  
+  set.seed(1)
+  p0_stim <- ggplot(ex %>% 
+                     filter(stim != 'uns') %>%
+                    sample_n(min(nrow(ex %>% 
+                                    filter(stim == 'uns') %>%
+                                    filter(Ce140Di > min(Ce140Di),
+                                           Ho165Di > min(Ho165Di))), 
+                                 nrow(ex %>% filter(stim != 'uns')))) %>%
+         filter(Ce140Di > min(Ce140Di),
+                Ho165Di > min(Ho165Di)), 
+       aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title = "Live singlets - stim")
+  
+  # Base plot - tnf
+  # ------------------------------------------
+  
+  message('pre base plot - tnf')
+  set.seed(1)
+  p0_tnf_stim_tbl <- ex %>% 
+    filter(stim != 'uns') %>%
+    filter(Nd145Di > 3,
+           Sm154Di > 3) %>%
+    filter(Nd146Di > min(Nd146Di),
+           Ho165Di > min(Ho165Di))
+  p0_tnf_uns_tbl <- ex %>% 
+    filter(stim == 'uns') %>%
+    filter(Nd145Di > 3,
+           Sm154Di > 3) %>%
+    filter(Nd146Di > min(Nd146Di),
+           Ho165Di > min(Ho165Di))
+  if(nrow(p0_tnf_uns_tbl) > nrow(p0_tnf_stim_tbl)){
+    p0_tnf_uns_tbl %<>% sample_n(nrow(p0_tnf_stim_tbl))
+  } else p0_tnf_stim_tbl %<>% sample_n(nrow(p0_tnf_uns_tbl))
+
+  p0_tnf_uns <- ggplot(p0_tnf_uns_tbl, 
+       aes(x = Nd146Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = 2.5, col = 'red', size = 1) + 
+    geom_hline(yintercept = 3, col = 'red', size = 1) + 
+    #geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "TNF", y = "IFNg", title = "CD4 T cells - unstim - pre filtering")
+  
+  p0_tnf_stim <- ggplot(p0_tnf_stim_tbl, 
+       aes(x = Nd146Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = 2.5, col = 'red', size = 1) + 
+    geom_hline(yintercept = 3, col = 'red', size = 1) + 
+    #geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "TNF", y = "IFNg", title = "CD4 T cells - stim - pre filtering")
+  
+  # Filter
+  # ------------------------------------------
+  
+  ex_rep <- ex %>%
+    filter(!(Ce140Di > beads_cut & Ho165Di > gamma_cut & ((int + slope * Ce140Di) > Ho165Di) )) 
+  
+  perc_removed <- nrow(ex_rep) %>%
+    divide_by(nrow(ex)) %>%
+    multiply_by(100) %>%
+    subtract(100) %>%
+    multiply_by(-1)
+  
+  perc_removed_uns <- nrow(ex_rep %>%
+                             filter(stim == 'uns')) %>%
+    divide_by(nrow(ex %>%
+                     filter(stim == 'uns'))) %>%
+    multiply_by(100) %>%
+    subtract(100) %>%
+    multiply_by(-1)
+
+  perc_removed_stim <- nrow(ex_rep %>%
+                             filter(stim != 'uns')) %>%
+    divide_by(nrow(ex %>%
+                     filter(stim != 'uns'))) %>%
+    multiply_by(100) %>%
+    subtract(100) %>%
+    multiply_by(-1)
+  
+  perc_removed_pos_uns <- nrow(ex_rep %>%
+                             filter(stim == 'uns') %>%
+                             filter(Nd145Di > 3,
+                                    Sm154Di > 3) %>%
+                             filter(Nd146Di > 2.5,
+                                    Ho165Di > 3)) %>%
+    divide_by(nrow(ex %>%
+                     filter(Nd145Di > 3,
+                            Sm154Di > 3) %>%
+                     filter(stim == 'uns') %>%
+                     filter(Nd146Di > 2.5,
+                            Ho165Di > 3))) %>%
+    multiply_by(100) %>%
+    subtract(100) %>%
+    multiply_by(-1)
+    
+  perc_removed_pos_stim <- nrow(ex_rep %>%
+                                  filter(Nd145Di > 3,
+                                         Sm154Di > 3) %>%
+                             filter(stim != 'uns') %>%
+                             filter(Nd146Di > 2.5,
+                                    Ho165Di > 3)) %>%
+    divide_by(nrow(ex %>%
+                     filter(Nd145Di > 3,
+                            Sm154Di > 3) %>%
+                     filter(stim != 'uns') %>%
+                     filter(Nd146Di > 2.5,
+                            Ho165Di > 3))) %>%
+    multiply_by(100) %>%
+    subtract(100) %>%
+    multiply_by(-1)
+  
+  # Post-filtering plot
+  # ------------------------------------------
+
+  message('pre filter plot')
+  p1 <- ggplot(ex_rep %>% 
+       filter(Ce140Di > min(Ce140Di),
+              Ho165Di > min(Ho165Di)), 
+     aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title =  paste0("Live singlets - Post filtering (removed ",
+                        round(perc_removed, 2), "% of live singlets)"))
+  
+  p <- cowplot::plot_grid(p0, p1, ncol = 2)
+
+  # Post-filtering plot - stim vs uns
+  # ------------------------------------------
+  
+  message('pre filter plot - stim')
+  p1_uns <- ggplot(ex_rep %>% 
+                     filter(stim == 'uns') %>%
+         filter(Ce140Di > min(Ce140Di),
+                Ho165Di > min(Ho165Di)), 
+       aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title = paste0("Live singlets - unstim -- post-filtering (removed ", round(perc_removed_uns, 2), "% of live singlets)"))
+  
+  set.seed(1)
+  p1_stim <- ggplot(ex_rep %>% 
+                     filter(stim != 'uns') %>%
+                      sample_n(min(nrow(ex_rep %>% 
+                                    filter(stim == 'uns') %>%
+                                    filter(Ce140Di > min(Ce140Di),
+                                           Ho165Di > min(Ho165Di))), 
+                                 nrow(ex_rep %>% filter(stim != 'uns')))) %>%
+         filter(Ce140Di > min(Ce140Di),
+                Ho165Di > min(Ho165Di)), 
+       aes(x = Ce140Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = beads_cut, col = 'red', size = 1) + 
+    geom_hline(yintercept = gamma_cut, col = 'red', size = 1) + 
+    geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "Beads", y = "IFNg", title = paste0("Live singlets - stim -- post-filtering (removed ", round(perc_removed_stim, 2), "% of live singlets)"))
+  
+  p_stim <- cowplot::plot_grid(p0_uns, p0_stim, p1_uns, p1_stim, 
+                               ncol = 2)
+  
+  # Post-filtering plot - tnf
+  # ------------------------------------------
+  
+  message('pre base plot - tnf')
+  set.seed(1)
+  p1_tnf_uns_tbl <- p0_tnf_uns_tbl %>% 
+    filter(!(Ce140Di > beads_cut & Ho165Di > gamma_cut & ((int + slope * Ce140Di) > Ho165Di) )) %>%
+    filter(Nd145Di > 3,
+           Sm154Di > 3) %>%
+    filter(Nd146Di > min(Nd146Di),
+           Ho165Di > min(Ho165Di))
+  p1_tnf_stim_tbl <- p0_tnf_stim_tbl %>% 
+    filter(!(Ce140Di > beads_cut & Ho165Di > gamma_cut & ((int + slope * Ce140Di) > Ho165Di) )) %>%
+    filter(Nd145Di > 3,
+           Sm154Di > 3) %>%
+    filter(Nd146Di > min(Nd146Di),
+           Ho165Di > min(Ho165Di))
+  #if(nrow(p0_tnf_uns_tbl) > nrow(p0_tnf_stim_tbl)){
+  #  p0_tnf_uns_tbl %<>% sample_n(nrow(p0_tnf_stim_tbl))
+  #} else p0_tnf_stim_tbl %<>% sample_n(nrow(p0_tnf_uns_tbl))
+
+  p1_tnf_uns <- ggplot(p1_tnf_uns_tbl, 
+       aes(x = Nd146Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = 2.5, col = 'red', size = 1) + 
+    geom_hline(yintercept = 3, col = 'red', size = 1) + 
+    #geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "TNF", y = "IFNg", title = paste0("CD4 T cells - unstim - post filtering (removed\n", round(perc_removed_pos_uns, 2), "% of IFNg+TNF+ CD4 T cells)"))
+  
+  p1_tnf_stim <- ggplot(p1_tnf_stim_tbl, 
+       aes(x = Nd146Di, y = Ho165Di)) + 
+    theme_cowplot(font_size = 7) +
+    geom_hex() + 
+    geom_vline(xintercept = 2.5, col = 'red', size = 1) + 
+    geom_hline(yintercept = 3, col = 'red', size = 1) + 
+    #geom_abline(intercept = int, slope = slope, size = 1, col = 'red') +
+    scale_fill_viridis_c(trans = 'log10') + 
+    background_grid(major = 'xy', minor = 'xy') +
+    theme(legend.position = 'none') +
+    labs(x = "TNF", y = "IFNg", title = paste0("CD4 T cells - stim - post filtering (removed\n", round(perc_removed_pos_stim, 2), "% of IFNg+TNF+ CD4 T cells)")) 
+  
+    p_tnf <- cowplot::plot_grid(p0_tnf_uns, p0_tnf_stim, 
+                                 p1_tnf_uns, p1_tnf_stim, 
+                               ncol = 2)
+  
+  # Save
+  # ------------------------------------------
+  
+  message('pre save plots')
+  # save plots
+  dir_save_proc <- file.path(dir_base, "processing files", "debeading_2")
+  if(!dir.exists(dir_save_proc)) dir.create(dir_save_proc, recursive = TRUE)
+  cowplot::ggsave2(file.path(dir_save_proc, paste0(batch, ".png")), plot = p, 
+                   height = 10, width = 20, units = 'cm')
+  cowplot::ggsave2(file.path(dir_save_proc, paste0(batch, "-tnf.png")), plot = p_tnf, 
+                 height = 20, width = 20, units = 'cm')
+  cowplot::ggsave2(file.path(dir_save_proc, paste0(batch, "-stim.png")), plot = p_stim, 
+                 height = 20, width = 20, units = 'cm')
+  
+  # save data
+  message('pre save data')
+  dir_save_fcs <- file.path(dir_base, "debeaded_2")
+  if(!dir.exists(dir_save_fcs)) dir.create(dir_save_fcs, recursive = TRUE)
+  walk(seq_along(fs_in), function(i){
+    fr <- fs_in[[i]]
+    ex_curr <- ex_rep %>%
+      filter(ind == i)
+    exprs(fr) <- ex_curr %>%
+      filter(ind == i) %>%
+      select(-c(ind, stim)) %>%
+      as.matrix %>%
+      sinh %>%
+      multiply_by(5)
+      
+    fn_init <-  fr@description$GUID
+    fn_final <- fn_init %>%
+      str_replace("time_cut", "debeaded_2") %>%
+      str_remove("_normalized") %>%
+      str_remove("normalized")
+    write.FCS(fr, filename = file.path(dir_save_fcs, fn_final))
+  })
+  
+})
+}
+
+```
+
+```{r .print_plots_in_dir}
+.print_plots_in_dir <- function(dir_plot){
+    # get plot paths
+    plot_path_vec <- list.files(dir_plot, full.names = TRUE)
+    # get plot anmes
+    plot_name_vec <- list.files(dir_plot, full.names = FALSE) %>%
+      str_remove(".png")
+    batch_vec<- list.files(dir_plot, full.names = FALSE) %>%
+      str_remove(".png") %>%
+      str_remove("-stim") %>%
+      str_remove("-tnf") %>%
+      unique
+    
+    for(batch in batch_vec){
+      plot_ind_path_vec <- which(str_detect(plot_path_vec, batch)) 
+      plot_ind_name_vec <- which(str_detect(plot_name_vec, batch))
+      if(sort(plot_ind_path_vec) != sort(plot_ind_name_vec)) stop(batch)
+      plot_ind_vec <- plot_ind_path_vec
+      plot_ind_vec <- plot_ind_vec[c(3,1,2)]
+      print(batch)
+      print(plot_ind_vec)
+      # print fcs name
+      pander::pandoc.header(batch, level = 3)
+      # print plots for each batch
+      for(i in plot_ind_vec){
+  
+        if(!str_detect(plot_name_vec[i], "stim") && 
+           !str_detect(plot_name_vec[i], "tnf")){
+          pander::pandoc.header("IFNg vs Beads for live singlets", level = 4)
+        } else if(str_detect(plot_name_vec[i], "tnf")){
+            pander::pandoc.header("IFNg vs TNF for CD4 T cells by stim condition ", 
+                                  level = 4)
+          } else if(str_detect(plot_name_vec[i], "stim")){
+              pander::pandoc.header("IFNg vs beads for live singlets by stim condition", 
+                                    level = 4)
+          }
+        
+        
+        # print plot
+        cat(paste0("![](", plot_path_vec[i], ")"), "\n")
+      }
+    invisible(TRUE)
+  }
+
+}
+```
+
+```{r , results = 'asis'}
+pander::pandoc.header("All Batches Excluding Those Recently Identified as Missing", level = 2)
+
+dir_base <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data"
+dir_save_proc <- file.path(dir_base, "processing files", "debeading_2")
+.print_plots_in_dir(dir_save_proc)
+
+```
+
+```{r , results = 'asis'}
+pander::pandoc.header("Previously missing CyTOF files", level = 2)
+
+dir_base <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/Missing Normalised CyTOF Data"
+dir_save_proc <- file.path(dir_base, "processing files", "debeading_2")
+.print_plots_in_dir(dir_save_proc)
+```
+
