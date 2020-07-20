@@ -65,7 +65,7 @@ for(i in 1:2){
   beads_cut <- 1; gamma_cut <- 0.75; int <- 1.7; slope <- 0.7
   
   # adjustments
-  k <- 0
+  k <- 1
   if(batch == "02-0185 DO AND 09-0296 D0 29SEP2017_normalized--time_cut.fcs"){
     gammma_cut <- 1.2
     k <- 0
@@ -489,7 +489,8 @@ for(i in 1:2){
     fn_final <- fn_init %>%
       str_replace("time_cut", "debeaded_2") %>%
       str_remove("_normalized") %>%
-      str_remove("normalized")
+      str_remove("normalized") %>%
+      str_replace("debeaded.fcs", "debeaded_2")
     write.FCS(fr, filename = file.path(dir_save_fcs, fn_final))
   })
   

@@ -4,3 +4,7 @@
 .Ruserdata
 .DS_Store
 *.Rproj
+
+vignettes/faust/CD8 _Plots_files/**
+vignettes/faust/plots/**
+vignettes/faust/CD8 Plots.html

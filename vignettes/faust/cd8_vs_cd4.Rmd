@@ -1,0 +1,128 @@
+---
+title: "CD8 Plots"
+output: 
+  html_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r , message = FALSE, warning = FALSE, results = 'hide'}
+# libraries
+library(CytoML)
+library(openCyto)
+library(ggcyto)
+library(magrittr)
+library(ggplot2)
+library(cowplot)
+library(stringr)
+library(purrr)
+library(dplyr)
+theme_set(theme_cowplot())
+
+```
+
+```{r calc_plots, eval = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+# load GatingSet
+dir_load <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/gs_cytof_acs"
+gs <- load_gs(dir_load)
+
+# create plots
+map(1:10, function(i){
+  message(i)
+  ind <- (i-1) * 10 + 5
+  fr <- gh_pop_get_data(gs[[ind]])
+  ex <- exprs(fr) %>% as_tibble
+  plot_tbl <- ex %>% filter(Er168Di > min(Er168Di), 
+                            Sm154Di > min(Sm154Di))
+  title <- fr@description$GUID %>%
+    str_remove("time_cut.fcs") %>%
+    str_remove("_ebv") %>%
+    str_remove("_mtbaux") %>%
+    str_remove("_p1") %>%
+    str_remove("_p4") %>%
+    str_remove("_uns") %>%
+    str_remove("_normalized") %>%
+    str_replace_all("-", " ") %>%
+    str_replace_all(" ", "_") %>%
+    str_trim
+  p <- ggplot(plot_tbl, aes(y = Sm154Di, x = Er168Di)) +
+    background_grid(major = 'xy') +
+    geom_hex() + 
+    scale_fill_viridis_c(trans = 'log10') +
+    labs(y = 'CD3', x = 'CD8-IgD', title = title)
+  dir_save <- DataPackageR::project_path('vignettes/faust/plots/cd8_vs_cd3')
+  if(!dir.exists(dir_save)) dir.create(dir_save)
+  ggsave2(file.path(dir_save, paste0(title, ".png")), p, 
+          height = 20, width = 20, units = "cm")
+  
+})
+```
+
+```{r calc_hists, eval = TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+# load GatingSet
+dir_load <- "C:/Users/migue/OneDrive - University of Cape Town/Work/PhD/Data/gs_cytof_acs"
+gs <- load_gs(dir_load)
+# create plots
+map(1:10, function(i){
+  message(i)
+  ind <- (i-1) * 10 + 5
+  fr <- gh_pop_get_data(gs[[ind]])
+  ex <- exprs(fr) %>% as_tibble
+  plot_tbl <- ex %>% filter(Er168Di > min(Er168Di))
+  title <- fr@description$GUID %>%
+    str_remove("time_cut.fcs") %>%
+    str_remove("_ebv") %>%
+    str_remove("_mtbaux") %>%
+    str_remove("_p1") %>%
+    str_remove("_p4") %>%
+    str_remove("_uns") %>%
+    str_remove("_normalized") %>%
+    str_replace_all("-", "_") %>%
+    str_replace_all(" ", "_") %>%
+    #str_replace_all("_", " ") %>%
+    str_trim
+  p <- ggplot(plot_tbl, aes(x = Er168Di)) +
+    background_grid(major = 'x', minor = 'x') +
+    geom_histogram(fill = 'gray50', col = 'gray85', bins = 30) +
+    labs(x = 'CD3', y = 'CD8-IgD', title = title)
+  dir_save <- DataPackageR::project_path('vignettes/faust/plots/cd8')
+  if(!dir.exists(dir_save)) dir.create(dir_save)
+  ggsave2(file.path(dir_save, paste0(title, ".png")), p, 
+          height = 15, width = 20, units = "cm")
+  
+})
+```
+
+```{r .print_plots_in_dir}
+.print_plots_in_dir <- function(dir_plot){
+  # get plot paths
+  plot_path_vec <- list.files(dir_plot, full.names = TRUE)
+  # get plot names
+  plot_name_vec <- list.files(dir_plot, full.names = FALSE) %>%
+    str_remove(".png") %>%
+    str_remove(".pdf")
+
+  for(i in seq_along(plot_name_vec)){
+    pander::pandoc.header(plot_name_vec[i], level = 3)
+    cat(paste0("![](", plot_path_vec[i], ")"), "\n")
+  }
+  invisible(TRUE)
+}
+```
+
+```{r , results = 'asis', message = FALSE, warning = FALSE, eval = TRUE}
+pander::pandoc.header("CD8 vs CD3", level = 2)
+
+dir_save_proc <- DataPackageR::project_path('vignettes/faust/plots/cd8_vs_cd3')
+.print_plots_in_dir(dir_save_proc)
+```
+
+```{r , results = 'asis', message = FALSE, warning = FALSE, eval = TRUE}
+pander::pandoc.header("CD8", level = 2)
+
+dir_save_proc <- DataPackageR::project_path('vignettes/faust/plots/cd8')
+.print_plots_in_dir(dir_save_proc)
+```
